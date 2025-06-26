@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transfarma | Visualización 3D y Gestión Documental</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-blue: #003C88;
+      --primary-green: #8BC540;
+      --secondary-gray: #5E5E5E;
+      --light-gray: #f5f7fa;
+      --medium-gray: #e0e6ed;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --success: #38a169;
+      --warning: #ecc94b;
+      --danger: #e53e3e;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --card-shadow: 0 6px 15px rgba(0, 60, 136, 0.1);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    body {
+      background: var(--light-gray);
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    /* Header Styles */
+    .company-header {
+      background: white;
+      padding: 15px 0;
+      box-shadow: var(--shadow);
+      border-bottom: 3px solid var(--primary-green);
+    }
+    
+    .header-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .logo-container img {
+      height: 50px;
+    }
+    
+    .company-name {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--primary-blue);
+    }
+    
+    .company-tagline {
+      font-size: 0.9rem;
+      color: var(--secondary-gray);
+      font-weight: 400;
+    }
+    
+    /* Main Content - Two Columns */
+    .main-content {
+      display: flex;
+      gap: 30px;
+      padding: 30px 0;
+    }
+    
+    .visualization-section {
+      flex: 3;
+      min-width: 0;
+    }
+    
+    .documents-section {
+      flex: 2;
+      min-width: 0;
+    }
+    
+    /* Visualization Panel */
+    .visualization-panel {
+      background: white;
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .panel-header {
+      padding: 20px;
+      background: var(--primary-blue);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .panel-header i {
+      font-size: 1.4rem;
+    }
+    
+    .panel-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    
+    .viewer-container {
+      position: relative;
+      width: 100%;
+      height: 500px;
+      border-bottom: 1px solid var(--medium-gray);
+    }
+    
+    #sketchup-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    .status-message {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      text-align: center;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    
+    .status-message.active {
+      display: flex;
+    }
+    
+    .status-icon {
+      font-size: 50px;
+      margin-bottom: 20px;
+      color: var(--primary-blue);
+    }
+    
+    .status-title {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      color: var(--primary-blue);
+    }
+    
+    .status-text {
+      max-width: 600px;
+      margin-bottom: 25px;
+      color: var(--secondary-gray);
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: var(--primary-blue);
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: 500;
+      margin: 5px;
+      transition: var(--transition);
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn:hover {
+      background: #002a5c;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--primary-blue);
+      color: var(--primary-blue);
+    }
+    
+    .btn-outline:hover {
+      background: var(--primary-blue);
+      color: white;
+    }
+    
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: var(--primary-blue);
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .model-info {
+      padding: 20px;
+      background: rgba(139, 197, 64, 0.1);
+      border-top: 1px solid var(--medium-gray);
+    }
+    
+    .info-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--primary-blue);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .info-details {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .info-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .info-label {
+      font-size: 0.85rem;
+      color: var(--secondary-gray);
+      margin-bottom: 5px;
+    }
+    
+    .info-value {
+      font-weight: 500;
+      color: var(--text-dark);
+    }
+    
+    /* Documents Section */
+    .documents-panel {
+      background: white;
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+      overflow: hidden;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .documents-header {
+      padding: 20px;
+      background: var(--primary-green);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .documents-header i {
+      font-size: 1.4rem;
+    }
+    
+    .documents-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    
+    .documents-content {
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+      max-height: 500px;
+    }
+    
+    .documents-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    
+    .document-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      border: 1px solid var(--medium-gray);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .document-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      border-color: var(--primary-green);
+    }
+    
+    .document-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 60, 136, 0.1);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--primary-blue);
+      flex-shrink: 0;
+    }
+    
+    .document-info {
+      flex-grow: 1;
+      min-width: 0;
+    }
+    
+    .document-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .document-meta {
+      display: flex;
+      color: var(--text-light);
+      font-size: 0.8rem;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .document-meta span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .document-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 60, 136, 0.1);
+      color: var(--primary-blue);
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .action-btn:hover {
+      background: var(--primary-blue);
+      color: white;
+      transform: translateY(-2px);
+    }
+    
+    .category-tabs {
+      display: flex;
+      background: var(--light-gray);
+      padding: 10px;
+      border-bottom: 1px solid var(--medium-gray);
+    }
+    
+    .tab {
+      padding: 8px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      color: var(--secondary-gray);
+    }
+    
+    .tab.active {
+      background: var(--primary-blue);
+      color: white;
+    }
+    
+    /* Footer */
+    .footer {
+      background: var(--primary-blue);
+      color: white;
+      padding: 25px 0;
+      margin-top: 40px;
+    }
+    
+    .footer-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    
+    .footer-logo img {
+      height: 40px;
+      filter: brightness(0) invert(1);
+    }
+    
+    .footer-text {
+      font-size: 0.9rem;
+      text-align: right;
+      color: white;
+    }
+    
+    .footer-text p {
+      margin: 3px 0;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 992px) {
+      .main-content {
+        flex-direction: column;
+      }
+      
+      .visualization-section, 
+      .documents-section {
+        flex: none;
+        width: 100%;
+      }
+      
+      .viewer-container {
+        height: 400px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .header-container {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+      }
+      
+      .logo-container {
+        justify-content: center;
+      }
+      
+      .footer-container {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+      }
+      
+      .footer-text {
+        text-align: center;
+      }
+      
+      .info-details {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 576px) {
+      .viewer-container {
+        height: 300px;
+      }
+      
+      .btn-group {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+        margin: 5px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Company Header -->
+  <header class="company-header">
+    <div class="header-container">
+      <div class="logo-container">
+        <img src="https://transfarma.cl/wp-content/uploads/2024/06/logo-transfarma-vec.png" alt="Transfarma Logo">
+        <div>
+          <div class="company-name">TRANSFARMA</div>
+          <div class="company-tagline">Logística farmacéutica especializada</div>
+        </div>
+      </div>
+      <div class="contact-info">
+        <div><i class="fas fa-envelope"></i> contacto@transfarma.cl</div>
+        <div><i class="fas fa-phone"></i> +56 2 2345 6789</div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <div class="container">
+    <div class="main-content">
+      <!-- Visualization Section -->
+      <section class="visualization-section">
+        <div class="visualization-panel">
+          <div class="panel-header">
+            <i class="fas fa-cube"></i>
+            <h2 class="panel-title">Sprinter 80% Capacidad - Distribución de data loggers</h2>
+          </div>
+          
+          <div class="viewer-container">
+            <iframe id="sketchup-frame" src="about:blank" frameborder="0" allowfullscreen></iframe>
+            
+            <div class="status-message" id="loading-message">
+              <div class="loading-spinner"></div>
+              <div class="status-title">Cargando modelo 3D...</div>
+              <div class="status-text">Estamos preparando la visualización del vehículo.</div>
+            </div>
+            
+            <div class="status-message" id="error-message">
+              <div class="status-icon"><i class="fas fa-exclamation-triangle"></i></div>
+              <div class="status-title">Problema con el visualizador</div>
+              <div class="status-text" id="error-text">El visualizador 3D no está disponible en este dispositivo o requiere actualización.</div>
+              <div class="btn-group">
+                <button id="retry-btn" class="btn"><i class="fas fa-redo"></i> Reintentar</button>
+                <a href="https://app.sketchup.com/share/tc/northAmerica/-NWQXEiQJZ8?stoken=DZzp9t1j_qiZD2P7zu_CMZ-zXgyHof3szcmpe5bJHLkgSCnu5JhugCqyshtEGsqp&source=web" class="btn btn-outline" target="_blank"><i class="fas fa-external-link-alt"></i> Abrir en SketchUp Web</a>
+              </div>
+            </div>
+            
+            <div class="status-message" id="mobile-message">
+              <div class="status-icon"><i class="fas fa-mobile-alt"></i></div>
+              <div class="status-title">Experiencia optimizada para computadoras</div>
+              <div class="status-text">Para una mejor visualización del modelo 3D, recomendamos usar un computador de escritorio o portátil.</div>
+              <div class="btn-group">
+                <a href="https://app.sketchup.com/share/tc/northAmerica/-NWQXEiQJZ8?stoken=DZzp9t1j_qiZD2P7zu_CMZ-zXgyHof3szcmpe5bJHLkgSCnu5JhugCqyshtEGsqp&source=web" class="btn" target="_blank"><i class="fas fa-external-link-alt"></i> Abrir en SketchUp Web</a>
+              </div>
+            </div>
+          </div>
+          
+          <div class="model-info">
+            <div class="info-title"><i class="fas fa-info-circle"></i> Información del modelo</div>
+            <div class="info-details">
+              <div class="info-item">
+                <span class="info-label">Vehículo</span>
+                <span class="info-value">Mercedes Sprinter</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Capacidad</span>
+                <span class="info-value">80%</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Data Loggers</span>
+                <span class="info-value">15 unidades</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Tipo</span>
+                <span class="info-value">Distribución isotérmica</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Documents Section -->
+      <section class="documents-section">
+        <div class="documents-panel">
+          <div class="documents-header">
+            <i class="fas fa-folder-open"></i>
+            <h2 class="documents-title">Documentos de Calificación</h2>
+          </div>
+          
+          <div class="category-tabs">
+            <div class="tab active" data-category="dq">DQ</div>
+            <div class="tab" data-category="oq">OQ</div>
+            <div class="tab" data-category="pq">PQ</div>
+          </div>
+          
+          <div class="documents-content">
+            <div class="highlight-box">
+              <i class="fas fa-exclamation-triangle"></i>
+              Los valores MKT fueron calculados con macros. Google Drive no las muestra, por lo que se recomienda descargar el archivo Excel para revisarlos correctamente.
+            </div>
+            
+            <div class="documents-grid" id="documents-grid">
+              <!-- Documents will be loaded here -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-logo">
+        <img src="https://transfarma.cl/wp-content/uploads/2024/06/logo-transfarma-vec.png" alt="Transfarma Logo">
+      </div>
+      <div class="footer-text">
+        <p>Sistema de Visualización & Gestión Documental &copy; 2025</p>
+        <p>Av. Américo Vespucio 1385, Santiago, Chile</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Document data
+    const documents = {
+      dq: [
+        { id: '1RxjMR-8Nfxw7uqmH5LIpjtMPAOKdHIBg', name: 'INFORME FINAL DQ', type: 'pdf', size: '965 kB', date: '15/06/2025' },
+        { id: '1dwxsjsuGGsjIbUq1jlkM_qXCvX5Z0s0d', name: 'PROTOCOLO DQ', type: 'pdf', size: '3.6 MB', date: '10/06/2025' },
+        { id: '1B7owyxFn37s_zWHtz5kCGtjftlVawOo1', name: 'ANEXO 1 DQ', type: 'pdf', size: '5.7 MB', date: '12/06/2025' },
+        { id: '13NUOWSTyeVxRZElRwzf2-nqeO1P7pWsN', name: 'ANEXO 2 DQ', type: 'pdf', size: '3.5 MB', date: '08/06/2025' }
+      ],
+      oq: [
+        { id: '1bMoPGZVSzepAlix49vOZ-QaVh5t9g9DQ', name: 'INFORME FINAL OQ', type: 'pdf', size: '1.2 MB', date: '20/06/2025' },
+        { id: '1tAcbsZXcR7tZT4drMDnOQukyTU_ad0Il', name: 'PROTOCOLO OQ', type: 'pdf', size: '4 MB', date: '18/06/2025' },
+        { id: '1j4YQ8ppIvOaaWsBeqL9ZxvWOqiKFN5vG', name: 'ANEXO 1 OQ', type: 'pdf', size: '678 kB', date: '16/06/2025' },
+        { id: '1MXHFaJeJaI-qqMaQo47qszem-kYrQrMS', name: 'MKT Perfil cálido, carga mínima', type: 'xlsm', size: '379 kB', previewLink: 'https://docs.google.com/spreadsheets/d/1MXHFaJeJaI-qqMaQo47qszem-kYrQrMS/edit?gid=706995565#gid=706995565', date: '22/06/2025' }
+      ],
+      pq: [
+        { id: '1bz2QpJTfAIpM97vCCElxE_KK-1OAN5U4', name: 'INFORME FINAL PQ', type: 'pdf', size: '1 MB', date: '25/06/2025' },
+        { id: '15XHbUBAqgQlVN8-hYzmjdwQ4hSBF9stM', name: 'PROTOCOLO PQ', type: 'pdf', size: '6.6 MB', date: '23/06/2025' },
+        { id: '1-2aw6Mj7cjm9DSDNR85jIL1VPZIhmscQ', name: 'ANEXO 1 PQ', type: 'pdf', size: '3.5 MB', date: '21/06/2025' },
+        { id: '1i9-NAIDp2mV6MXnXl5MfHWdOvnojv9DX', name: 'ANALISIS TEMP PMC', type: 'xlsm', size: '134 kB', previewLink: 'https://docs.google.com/spreadsheets/d/1i9-NAIDp2mV6MXnXl5MfHWdOvnojv9DX/edit?gid=326442532#gid=326442532', date: '26/06/2025' }
+      ]
+    };
+
+    // Visualization functions
+    document.addEventListener('DOMContentLoaded', function() {
+      const sketchupFrame = document.getElementById('sketchup-frame');
+      const loadingMessage = document.getElementById('loading-message');
+      const errorMessage = document.getElementById('error-message');
+      const mobileMessage = document.getElementById('mobile-message');
+      const errorText = document.getElementById('error-text');
+      const retryBtn = document.getElementById('retry-btn');
+      
+      // URL del modelo SketchUp
+      const modelUrl = "https://app.sketchup.com/share/tc/northAmerica/-NWQXEiQJZ8?stoken=DZzp9t1j_qiZD2P7zu_CMZ-zXgyHof3szcmpe5bJHLkgSCnu5JhugCqyshtEGsqp&source=web";
+      
+      // Detectar si es móvil
+      function isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      }
+      
+      // Cargar el modelo
+      function loadModel() {
+        // Mostrar carga
+        loadingMessage.classList.add('active');
+        errorMessage.classList.remove('active');
+        mobileMessage.classList.remove('active');
+        
+        // Si es móvil, mostrar mensaje específico
+        if (isMobile()) {
+          setTimeout(() => {
+            loadingMessage.classList.remove('active');
+            mobileMessage.classList.add('active');
+          }, 1500);
+          return;
+        }
+        
+        // Intentar cargar el modelo
+        sketchupFrame.src = modelUrl;
+        
+        // Verificar si se carga correctamente
+        const loadCheck = setTimeout(() => {
+          // Si el iframe no ha cargado contenido después de 5 segundos
+          if (!sketchupFrame.contentWindow || !sketchupFrame.contentWindow.document.body.innerHTML) {
+            showError("El visualizador no responde. Puede que necesites actualizar tu navegador.");
+          }
+        }, 5000);
+        
+        // Manejar carga exitosa
+        sketchupFrame.onload = function() {
+          clearTimeout(loadCheck);
+          loadingMessage.classList.remove('active');
+        };
+        
+        // Manejar errores
+        sketchupFrame.onerror = function() {
+          clearTimeout(loadCheck);
+          showError("Error al cargar el visualizador 3D. Verifica tu conexión a internet.");
+        };
+      }
+      
+      // Mostrar mensaje de error
+      function showError(message) {
+        loadingMessage.classList.remove('active');
+        errorText.textContent = message;
+        errorMessage.classList.add('active');
+      }
+      
+      // Botón de reintento
+      retryBtn.addEventListener('click', function() {
+        loadModel();
+      });
+      
+      // Iniciar carga
+      loadModel();
+    });
+
+    // Document management functions
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabs = document.querySelectorAll('.tab');
+      const documentsGrid = document.getElementById('documents-grid');
+      
+      // Load documents for a category
+      function loadDocuments(category) {
+        const docs = documents[category];
+        let html = '';
+        
+        if (docs && docs.length > 0) {
+          docs.forEach(doc => {
+            const icon = getIconForType(doc.type);
+            
+            html += `
+            <div class="document-card">
+              <div class="document-icon">
+                ${icon}
+              </div>
+              <div class="document-info">
+                <div class="document-title">${doc.name}</div>
+                <div class="document-meta">
+                  <span><i class="fas fa-file"></i> ${doc.type.toUpperCase()}</span>
+                  <span><i class="fas fa-database"></i> ${doc.size}</span>
+                  <span><i class="fas fa-calendar"></i> ${doc.date}</span>
+                </div>
+              </div>
+              <div class="document-actions">
+                <button class="action-btn" onclick="viewDocument('${doc.id}', '${doc.name}', '${doc.type}', ${doc.previewLink ? `'${doc.previewLink}'` : 'null'})">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn" onclick="downloadDocument('${doc.id}', '${doc.name}')">
+                  <i class="fas fa-download"></i>
+                </button>
+              </div>
+            </div>
+            `;
+          });
+        } else {
+          html = '<div class="empty-state">No se encontraron documentos en esta categoría</div>';
+        }
+        
+        documentsGrid.innerHTML = html;
+      }
+      
+      // Get icon for document type
+      function getIconForType(type) {
+        const icons = {
+          'pdf': '<i class="far fa-file-pdf"></i>',
+          'docx': '<i class="far fa-file-word"></i>',
+          'xlsm': '<i class="far fa-file-excel"></i>',
+          'pptx': '<i class="far fa-file-powerpoint"></i>'
+        };
+        
+        return icons[type] || '<i class="far fa-file"></i>';
+      }
+      
+      // Set active tab
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          tabs.forEach(t => t.classList.remove('active'));
+          this.classList.add('active');
+          loadDocuments(this.getAttribute('data-category'));
+        });
+      });
+      
+      // Load initial documents (DQ)
+      loadDocuments('dq');
+    });
+
+    // View document
+    function viewDocument(id, name, type, previewLink = null) {
+      if (type === 'pdf') {
+        // Open PDF in new tab
+        window.open(`https://drive.google.com/file/d/${id}/preview`, '_blank');
+      } else if (type === 'xlsm' && previewLink) {
+        // Open Excel in new tab
+        window.open(previewLink, '_blank');
+      } else {
+        alert('La vista previa solo está disponible para documentos PDF y Excel. Por favor descargue el archivo para verlo.');
+      }
+    }
+    
+    // Download document
+    function downloadDocument(id, name) {
+      // Download URL
+      const downloadUrl = `https://drive.google.com/uc?export=download&id=${id}`;
+      
+      // Create temporary link for download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.setAttribute('download', name);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Show notification
+      showNotification('Descarga iniciada');
+    }
+    
+    // Show notification
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+      document.body.appendChild(notification);
+      
+      // Position notification
+      notification.style.position = 'fixed';
+      notification.style.bottom = '20px';
+      notification.style.right = '20px';
+      notification.style.padding = '12px 20px';
+      notification.style.background = 'var(--success)';
+      notification.style.color = 'white';
+      notification.style.borderRadius = '5px';
+      notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+      notification.style.zIndex = '1000';
+      notification.style.opacity = '0';
+      notification.style.transform = 'translateY(20px)';
+      notification.style.transition = 'all 0.3s ease';
+      
+      // Show notification
+      setTimeout(() => {
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+      }, 10);
+      
+      // Remove after delay
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
