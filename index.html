@@ -1,209 +1,600 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Visualización de distribución de data loggers en carga para Sprinter al 80% de capacidad">
-  <title>Sprinter 80% Capacidad | Distribución de Data Loggers | Transfarma</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary-color: #2c3e50;
-      --secondary-color: #3498db;
-      --accent-color: #e74c3c;
-      --light-gray: #f8f9fa;
-      --dark-gray: #343a40;
-      --text-color: #333;
-      --border-radius: 8px;
-      --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      --transition: all 0.3s ease;
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    html, body {
-      height: 100%;
-      font-family: 'Roboto', sans-serif;
-      background-color: var(--light-gray);
-      color: var(--text-color);
-      line-height: 1.6;
-    }
-    
-    body {
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-    }
-    
-    header {
-      background-color: white;
-      padding: 1.5rem 0;
-      box-shadow: var(--box-shadow);
-      z-index: 100;
-    }
-    
-    .header-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-    }
-    
-    #logo {
-      height: 60px;
-      width: auto;
-      transition: var(--transition);
-    }
-    
-    #logo:hover {
-      opacity: 0.9;
-    }
-    
-    .title-container {
-      text-align: center;
-      padding: 0 1rem;
-    }
-    
-    h1 {
-      font-size: 1.8rem;
-      font-weight: 500;
-      color: var(--primary-color);
-      margin-bottom: 0.5rem;
-    }
-    
-    .subtitle {
-      font-size: 1rem;
-      color: var(--dark-gray);
-      font-weight: 400;
-    }
-    
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      max-width: 1400px;
-      margin: 2rem auto;
-      padding: 0 2rem;
-      width: 100%;
-    }
-    
-    .iframe-container {
-      position: relative;
-      width: 100%;
-      flex: 1;
-      min-height: 500px;
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      box-shadow: var(--box-shadow);
-      background-color: white;
-      border: 1px solid #e0e0e0;
-    }
-    
-    iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-    
-    footer {
-      background-color: var(--primary-color);
-      color: white;
-      text-align: center;
-      padding: 1.5rem 0;
-      margin-top: auto;
-    }
-    
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
-    
-    .footer-links {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      margin-bottom: 1rem;
-    }
-    
-    .footer-links a {
-      color: white;
-      text-decoration: none;
-      transition: var(--transition);
-    }
-    
-    .footer-links a:hover {
-      color: var(--secondary-color);
-    }
-    
-    .copyright {
-      font-size: 0.9rem;
-      opacity: 0.8;
-    }
-    
-    @media (max-width: 768px) {
-      .header-container {
-        padding: 1rem;
-      }
-      
-      h1 {
-        font-size: 1.4rem;
-      }
-      
-      .subtitle {
-        font-size: 0.9rem;
-      }
-      
-      main {
-        padding: 0 1rem;
-        margin: 1rem auto;
-      }
-      
-      .footer-links {
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extrapolador de Datos de Temperatura</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --success: #2ecc71;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 30px;
+        }
+        
+        .controls {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            background: var(--light);
+            border-radius: 10px;
+            margin-right: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-container {
+            flex: 2;
+            min-width: 500px;
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .control-group h2 {
+            margin-bottom: 20px;
+            color: var(--primary);
+            font-size: 1.4rem;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input[type="number"], input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus, input[type="file"]:focus {
+            border-color: var(--secondary);
+            outline: none;
+        }
+        
+        .range-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .range-container input[type="range"] {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 10px;
+            outline: none;
+        }
+        
+        .range-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: var(--secondary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        button {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        #downloadBtn {
+            background: var(--success);
+        }
+        
+        #downloadBtn:hover {
+            background: #27ae60;
+        }
+        
+        .data-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+        
+        .info-card p {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+        
+        .original-min { color: #3498db; }
+        .original-max { color: #e74c3c; }
+        .new-min { color: #2ecc71; }
+        .new-max { color: #f39c12; }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--dark);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .controls {
+                margin-right: 0;
+            }
+            
+            .chart-container {
+                min-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="header-container">
-      <img id="logo" src="https://transfarma.cl/wp-content/uploads/2024/06/logo-transfarma-vec.png" alt="Logo de Transfarma" />
-      <div class="title-container">
-        <h1>Sprinter 80% Capacidad - Distribución de Data Loggers</h1>
-        <p class="subtitle">Visualización interactiva de la disposición de sensores en la carga</p>
-      </div>
+    <div class="container">
+        <header>
+            <h1>Extrapolador de Datos de Temperatura</h1>
+            <p class="subtitle">Sube tus datos originales, ajusta los valores máximo y mínimo, y descarga el nuevo conjunto de datos extrapolados</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="controls">
+                <div class="control-group">
+                    <h2>Carga de Datos</h2>
+                    <div class="input-group">
+                        <label for="csvFile">Seleccionar archivo CSV:</label>
+                        <input type="file" id="csvFile" accept=".csv">
+                    </div>
+                    <button id="loadBtn">Cargar Datos</button>
+                </div>
+                
+                <div class="control-group">
+                    <h2>Ajuste de Parámetros</h2>
+                    <div class="input-group">
+                        <label for="minTemp">Temperatura Mínima:</label>
+                        <input type="number" id="minTemp" step="0.1" placeholder="Ej: 15.5">
+                        <div class="range-container">
+                            <input type="range" id="minTempRange" min="-10" max="50" step="0.5">
+                            <span id="minTempValue">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="maxTemp">Temperatura Máxima:</label>
+                        <input type="number" id="maxTemp" step="0.1" placeholder="Ej: 32.0">
+                        <div class="range-container">
+                            <input type="range" id="maxTempRange" min="0" max="60" step="0.5">
+                            <span id="maxTempValue">--</span>
+                        </div>
+                    </div>
+                    
+                    <button id="updateBtn">Actualizar Extrapolación</button>
+                </div>
+                
+                <div class="control-group">
+                    <h2>Exportar Resultados</h2>
+                    <button id="downloadBtn">Descargar CSV Extrapolado</button>
+                </div>
+                
+                <div class="data-info">
+                    <div class="info-card">
+                        <h3>Mínimo Original</h3>
+                        <p id="originalMin" class="original-min">--</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Máximo Original</h3>
+                        <p id="originalMax" class="original-max">--</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Nuevo Mínimo</h3>
+                        <p id="newMin" class="new-min">--</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Nuevo Máximo</h3>
+                        <p id="newMax" class="new-max">--</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="temperatureChart"></canvas>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Extrapolador de Datos de Temperatura | Los datos se procesan completamente en tu navegador</p>
+        </footer>
     </div>
-  </header>
-  
-  <main>
-    <div class="iframe-container">
-      <iframe src="https://3dwarehouse.sketchup.com/embed/e0cad75f-2c00-4563-b2ae-155451e8df1c?token=MkgABU-NUrE=&binaryName=s21" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" allowfullscreen></iframe>
-    </div>
-  </main>
-  
-  <footer>
-    <div class="footer-content">
-      <div class="footer-links">
-        <a href="https://transfarma.cl" target="_blank">Sitio Web</a>
-        <a href="mailto:contacto@transfarma.cl">Contacto</a>
-        <a href="https://transfarma.cl/privacidad" target="_blank">Políticas de Privacidad</a>
-      </div>
-      <p class="copyright">© 2024 Transfarma. Todos los derechos reservados.</p>
-    </div>
-  </footer>
+
+    <script>
+        // Variables globales
+        let originalData = [];
+        let extrapolatedData = [];
+        let minOriginal = 0;
+        let maxOriginal = 0;
+        let minTemp = 0;
+        let maxTemp = 0;
+        let temperatureChart = null;
+
+        // Elementos del DOM
+        const csvFileInput = document.getElementById('csvFile');
+        const loadBtn = document.getElementById('loadBtn');
+        const minTempInput = document.getElementById('minTemp');
+        const maxTempInput = document.getElementById('maxTemp');
+        const minTempRange = document.getElementById('minTempRange');
+        const maxTempRange = document.getElementById('maxTempRange');
+        const minTempValue = document.getElementById('minTempValue');
+        const maxTempValue = document.getElementById('maxTempValue');
+        const updateBtn = document.getElementById('updateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const originalMinElem = document.getElementById('originalMin');
+        const originalMaxElem = document.getElementById('originalMax');
+        const newMinElem = document.getElementById('newMin');
+        const newMaxElem = document.getElementById('newMax');
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', () => {
+            // Configurar eventos
+            loadBtn.addEventListener('click', loadCSV);
+            updateBtn.addEventListener('click', updateExtrapolation);
+            downloadBtn.addEventListener('click', downloadCSV);
+            
+            // Configurar inputs de rango
+            minTempRange.addEventListener('input', () => {
+                minTempInput.value = minTempRange.value;
+                minTempValue.textContent = minTempRange.value + "°C";
+            });
+            
+            maxTempRange.addEventListener('input', () => {
+                maxTempInput.value = maxTempRange.value;
+                maxTempValue.textContent = maxTempRange.value + "°C";
+            });
+            
+            minTempInput.addEventListener('input', () => {
+                minTempRange.value = minTempInput.value;
+                minTempValue.textContent = minTempInput.value + "°C";
+            });
+            
+            maxTempInput.addEventListener('input', () => {
+                maxTempRange.value = maxTempInput.value;
+                maxTempValue.textContent = maxTempInput.value + "°C";
+            });
+            
+            // Inicializar gráfico
+            initChart();
+        });
+
+        // Inicializar gráfico
+        function initChart() {
+            const ctx = document.getElementById('temperatureChart').getContext('2d');
+            temperatureChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Datos Originales',
+                            data: [],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Datos Extrapolados',
+                            data: [],
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Temperatura (°C)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Mediciones (cada 10 minutos)'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        // Cargar archivo CSV
+        function loadCSV() {
+            const file = csvFileInput.files[0];
+            if (!file) {
+                alert('Por favor, selecciona un archivo CSV');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    // Parsear CSV (asumiendo un valor por línea)
+                    originalData = content.split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line !== '')
+                        .map(Number)
+                        .filter(num => !isNaN(num));
+                    
+                    if (originalData.length === 0) {
+                        throw new Error('El archivo CSV no contiene datos válidos');
+                    }
+                    
+                    // Calcular min y max originales
+                    minOriginal = Math.min(...originalData);
+                    maxOriginal = Math.max(...originalData);
+                    
+                    // Establecer valores iniciales para extrapolación
+                    minTemp = minOriginal;
+                    maxTemp = maxOriginal;
+                    
+                    // Actualizar controles
+                    minTempInput.value = minOriginal.toFixed(1);
+                    maxTempInput.value = maxOriginal.toFixed(1);
+                    minTempRange.value = minOriginal.toFixed(1);
+                    maxTempRange.value = maxOriginal.toFixed(1);
+                    minTempRange.min = (minOriginal - 10).toFixed(1);
+                    maxTempRange.max = (maxOriginal + 10).toFixed(1);
+                    minTempValue.textContent = minOriginal.toFixed(1) + "°C";
+                    maxTempValue.textContent = maxOriginal.toFixed(1) + "°C";
+                    
+                    // Actualizar información
+                    originalMinElem.textContent = minOriginal.toFixed(1) + "°C";
+                    originalMaxElem.textContent = maxOriginal.toFixed(1) + "°C";
+                    newMinElem.textContent = minTemp.toFixed(1) + "°C";
+                    newMaxElem.textContent = maxTemp.toFixed(1) + "°C";
+                    
+                    // Realizar extrapolación inicial
+                    extrapolateData();
+                    
+                    // Actualizar gráfico
+                    updateChart();
+                    
+                    alert(`Datos cargados correctamente: ${originalData.length} mediciones`);
+                } catch (error) {
+                    alert('Error al procesar el archivo: ' + error.message);
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Extrapolar datos
+        function extrapolateData() {
+            if (originalData.length === 0) return;
+            
+            // Calcular el rango original
+            const originalRange = maxOriginal - minOriginal;
+            
+            // Calcular el nuevo rango
+            const newRange = maxTemp - minTemp;
+            
+            // Escalar los datos al nuevo rango manteniendo la forma
+            extrapolatedData = originalData.map(value => {
+                // Normalizar al rango [0, 1]
+                const normalized = (value - minOriginal) / originalRange;
+                // Aplicar al nuevo rango
+                return minTemp + normalized * newRange;
+            });
+        }
+
+        // Actualizar extrapolación
+        function updateExtrapolation() {
+            if (originalData.length === 0) {
+                alert('Primero carga un archivo CSV');
+                return;
+            }
+            
+            // Obtener nuevos valores
+            minTemp = parseFloat(minTempInput.value);
+            maxTemp = parseFloat(maxTempInput.value);
+            
+            if (isNaN(minTemp) {
+                alert('Por favor ingresa un valor numérico para la temperatura mínima');
+                return;
+            }
+            
+            if (isNaN(maxTemp)) {
+                alert('Por favor ingresa un valor numérico para la temperatura máxima');
+                return;
+            }
+            
+            if (minTemp >= maxTemp) {
+                alert('La temperatura mínima debe ser menor que la máxima');
+                return;
+            }
+            
+            // Actualizar valores mostrados
+            minTempRange.value = minTemp;
+            maxTempRange.value = maxTemp;
+            minTempValue.textContent = minTemp.toFixed(1) + "°C";
+            maxTempValue.textContent = maxTemp.toFixed(1) + "°C";
+            newMinElem.textContent = minTemp.toFixed(1) + "°C";
+            newMaxElem.textContent = maxTemp.toFixed(1) + "°C";
+            
+            // Realizar extrapolación
+            extrapolateData();
+            
+            // Actualizar gráfico
+            updateChart();
+        }
+
+        // Actualizar gráfico
+        function updateChart() {
+            if (temperatureChart && originalData.length > 0) {
+                // Crear etiquetas para el eje X
+                const labels = Array.from({length: originalData.length}, (_, i) => `M${i+1}`);
+                
+                // Actualizar datos del gráfico
+                temperatureChart.data.labels = labels;
+                temperatureChart.data.datasets[0].data = originalData;
+                temperatureChart.data.datasets[1].data = extrapolatedData;
+                
+                // Actualizar el gráfico
+                temperatureChart.update();
+            }
+        }
+
+        // Descargar CSV
+        function downloadCSV() {
+            if (extrapolatedData.length === 0) {
+                alert('No hay datos extrapolados para descargar');
+                return;
+            }
+            
+            // Crear contenido CSV
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + extrapolatedData.map(value => value.toFixed(4)).join('\n');
+            
+            // Crear enlace de descarga
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "datos_extrapolados.csv");
+            document.body.appendChild(link);
+            
+            // Descargar
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
 </body>
 </html>
