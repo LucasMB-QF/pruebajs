@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrapolador con Deformación Avanzada de Curvas</title>
+    <title>Extrapolador Avanzado con Controles de Deformación</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -15,6 +15,8 @@
             --dark: #34495e;
             --success: #2ecc71;
             --variation: #9b59b6;
+            --horizontal: #1abc9c;
+            --vertical: #f1c40f;
         }
         
         * {
@@ -78,13 +80,13 @@
         .chart-container {
             flex: 2;
             min-width: 600px;
-            height: 500px; /* Altura reducida para dar espacio al control */
+            height: 500px;
             background: white;
             border-radius: 10px;
             padding: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             position: relative;
-            margin-bottom: 20px; /* Espacio para el control */
+            margin-bottom: 20px;
         }
         
         .control-group {
@@ -303,7 +305,6 @@
             margin-bottom: 5px;
         }
         
-        /* CAMBIO CLAVE: Control de deformación debajo del gráfico */
         .deformation-controls {
             background: #f8f9fa;
             padding: 15px;
@@ -329,6 +330,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            margin-bottom: 15px;
         }
         
         .deformation-intensity input[type="range"] {
@@ -344,23 +346,62 @@
             -webkit-appearance: none;
             width: 25px;
             height: 25px;
-            background: var(--variation);
             border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.3);
+        }
+        
+        #shapeDeformation::-webkit-slider-thumb {
+            background: var(--variation);
+        }
+        
+        #horizontalDeformation::-webkit-slider-thumb {
+            background: var(--horizontal);
+        }
+        
+        #verticalDeformation::-webkit-slider-thumb {
+            background: var(--vertical);
         }
         
         .deformation-intensity span {
             min-width: 40px;
             text-align: center;
             font-weight: bold;
+        }
+        
+        #deformationPercent {
             color: var(--variation);
+        }
+        
+        #horizontalPercent {
+            color: var(--horizontal);
+        }
+        
+        #verticalPercent {
+            color: var(--vertical);
         }
         
         .deformation-description {
             margin-top: 10px;
             font-size: 0.85rem;
             color: #6c757d;
+        }
+        
+        .toggle-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .toggle-label input {
+            margin-right: 8px;
         }
         
         @media (max-width: 1000px) {
@@ -378,8 +419,8 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-wave-square"></i> Extrapolador con Deformación Avanzada de Curvas</h1>
-            <p class="subtitle">Controla la deformación de la curva con el deslizador debajo del gráfico - ¡Actualización instantánea!</p>
+            <h1><i class="fas fa-wave-square"></i> Extrapolador Avanzado con Controles de Deformación</h1>
+            <p class="subtitle">Controla la deformación horizontal, vertical y de forma para crear extrapolaciones creíbles</p>
         </header>
         
         <div class="main-content">
@@ -390,7 +431,7 @@
                         <li><i class="fas fa-check"></i> Sube tu archivo CSV con valores de temperatura (un valor por línea)</li>
                         <li><i class="fas fa-check"></i> Usa comas como separador decimal (ej: 23,5)</li>
                         <li><i class="fas fa-check"></i> Ajusta los valores mínimos y máximos deseados</li>
-                        <li><i class="fas fa-check"></i> <strong>Desliza el control debajo del gráfico para deformar completamente la curva</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Usa los controles de deformación para ajustar la curva</strong></li>
                         <li><i class="fas fa-check"></i> Descarga los datos cuando estés satisfecho</li>
                     </ul>
                 </div>
@@ -460,9 +501,21 @@
                     <canvas id="temperatureChart"></canvas>
                 </div>
                 
-                <!-- CAMBIO CLAVE: Control de deformación debajo del gráfico -->
+                <!-- Controles de deformación -->
                 <div class="deformation-controls">
-                    <h3><i class="fas fa-sliders-h"></i> Control de Deformación</h3>
+                    <h3><i class="fas fa-sliders-h"></i> Controles Avanzados de Deformación</h3>
+                    
+                    <div class="toggle-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="smoothCurve" checked>
+                            <i class="fas fa-wave-circle"></i> Suavizar curva
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="autoAdjust" checked>
+                            <i class="fas fa-magic"></i> Ajuste automático
+                        </label>
+                    </div>
+                    
                     <div class="deformation-intensity">
                         <span>Forma Original</span>
                         <input type="range" id="shapeDeformation" min="0" max="100" value="50">
@@ -470,14 +523,34 @@
                         <span id="deformationPercent">50%</span>
                     </div>
                     <div class="deformation-description">
-                        <p><i class="fas fa-info-circle"></i> Desliza para deformar completamente la curva - Altera subidas, bajadas y picos</p>
+                        <p><i class="fas fa-info-circle"></i> Deformación de forma - Altera subidas, bajadas y picos</p>
+                    </div>
+                    
+                    <div class="deformation-intensity">
+                        <span>Comprimir</span>
+                        <input type="range" id="horizontalDeformation" min="0" max="100" value="50">
+                        <span>Expandir</span>
+                        <span id="horizontalPercent">50%</span>
+                    </div>
+                    <div class="deformation-description">
+                        <p><i class="fas fa-info-circle"></i> Deformación horizontal - Controla la distribución temporal</p>
+                    </div>
+                    
+                    <div class="deformation-intensity">
+                        <span>Menos Amplitud</span>
+                        <input type="range" id="verticalDeformation" min="0" max="100" value="50">
+                        <span>Más Amplitud</span>
+                        <span id="verticalPercent">50%</span>
+                    </div>
+                    <div class="deformation-description">
+                        <p><i class="fas fa-info-circle"></i> Deformación vertical - Controla la amplitud de las variaciones</p>
                     </div>
                 </div>
             </div>
         </div>
         
         <footer>
-            <p><i class="fas fa-info-circle"></i> Extrapolador de Datos de Temperatura | Deformación avanzada en tiempo real</p>
+            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado de Datos de Temperatura | Controles de deformación en tiempo real</p>
         </footer>
     </div>
 
@@ -490,7 +563,11 @@
         let maxTemp = 0;
         let temperatureChart = null;
         let deformationLevel = 0.5;
+        let horizontalDeformation = 0.5;
+        let verticalDeformation = 0.5;
         let noiseSeed = Date.now();
+        let smoothCurve = true;
+        let autoAdjust = true;
 
         // Elementos del DOM
         const csvFileInput = document.getElementById('csvFile');
@@ -511,12 +588,33 @@
         const progressContainer = document.getElementById('progressContainer');
         const progressBar = document.getElementById('progressBar');
         const shapeDeformationSlider = document.getElementById('shapeDeformation');
+        const horizontalDeformationSlider = document.getElementById('horizontalDeformation');
+        const verticalDeformationSlider = document.getElementById('verticalDeformation');
         const deformationPercent = document.getElementById('deformationPercent');
+        const horizontalPercent = document.getElementById('horizontalPercent');
+        const verticalPercent = document.getElementById('verticalPercent');
+        const smoothCurveCheckbox = document.getElementById('smoothCurve');
+        const autoAdjustCheckbox = document.getElementById('autoAdjust');
 
         // Función de ruido pseudoaleatorio (para variaciones consistentes)
         function noise(index) {
             const x = Math.sin(index * 12.9898 + noiseSeed) * 43758.5453;
             return x - Math.floor(x);
+        }
+
+        // Función para suavizar datos
+        function smoothData(data, windowSize = 3) {
+            const smoothed = [];
+            for (let i = 0; i < data.length; i++) {
+                const start = Math.max(0, i - Math.floor(windowSize/2));
+                const end = Math.min(data.length, i + Math.ceil(windowSize/2));
+                let sum = 0;
+                for (let j = start; j < end; j++) {
+                    sum += data[j];
+                }
+                smoothed[i] = sum / (end - start);
+            }
+            return smoothed;
         }
 
         // Inicializar la aplicación
@@ -552,11 +650,38 @@
                 updateExtrapolation();
             });
             
-            // Control de deformación en tiempo real
+            // Controles de deformación
             shapeDeformationSlider.addEventListener('input', () => {
                 deformationLevel = shapeDeformationSlider.value / 100;
                 deformationPercent.textContent = shapeDeformationSlider.value + '%';
                 applyShapeDeformation();
+            });
+            
+            horizontalDeformationSlider.addEventListener('input', () => {
+                horizontalDeformation = horizontalDeformationSlider.value / 100;
+                horizontalPercent.textContent = horizontalDeformationSlider.value + '%';
+                applyShapeDeformation();
+            });
+            
+            verticalDeformationSlider.addEventListener('input', () => {
+                verticalDeformation = verticalDeformationSlider.value / 100;
+                verticalPercent.textContent = verticalDeformationSlider.value + '%';
+                applyShapeDeformation();
+            });
+            
+            // Controles de opciones
+            smoothCurveCheckbox.addEventListener('change', () => {
+                smoothCurve = smoothCurveCheckbox.checked;
+                applyShapeDeformation();
+            });
+            
+            autoAdjustCheckbox.addEventListener('change', () => {
+                autoAdjust = autoAdjustCheckbox.checked;
+                if (autoAdjust) {
+                    minTempInput.value = minOriginal.toFixed(1).replace('.', ',');
+                    maxTempInput.value = maxOriginal.toFixed(1).replace('.', ',');
+                    updateExtrapolation();
+                }
             });
             
             // Inicializar gráfico
@@ -586,13 +711,13 @@
                             fill: false
                         },
                         {
-                            label: 'Curva Deformada',
+                            label: 'Curva Extrapolada',
                             data: [],
                             borderColor: '#e74c3c',
                             backgroundColor: 'rgba(231, 76, 60, 0.1)',
                             borderWidth: 3,
                             pointRadius: 0,
-                            tension: 0.4,
+                            tension: 0.5, // Mayor tensión para curva más suave
                             fill: false
                         }
                     ]
@@ -788,17 +913,18 @@
             }
             
             // Aplicar deformación avanzada
-            if (deformationLevel > 0) {
-                const amplitude = (maxTemp - minTemp) * 0.3 * deformationLevel;
+            if (deformationLevel > 0 || horizontalDeformation > 0 || verticalDeformation > 0) {
+                const amplitude = (maxTemp - minTemp) * 0.3 * deformationLevel * verticalDeformation;
                 const frequency = 0.05 + deformationLevel * 0.1;
+                const horizontalFactor = 1 + horizontalDeformation * 0.5;
                 
                 for (let i = 0; i < deformedData.length; i++) {
                     // Ruido para deformación aleatoria
                     const noiseFactor = noise(i) * 2 - 1;
                     
                     // Ondas para deformación estructurada
-                    const wave1 = Math.sin(i * frequency) * amplitude;
-                    const wave2 = Math.cos(i * frequency * 0.7) * amplitude * 0.6;
+                    const wave1 = Math.sin(i * frequency * horizontalFactor) * amplitude;
+                    const wave2 = Math.cos(i * frequency * 0.7 * horizontalFactor) * amplitude * 0.6;
                     
                     // Combinar efectos
                     const deformation = noiseFactor * amplitude * 0.5 + wave1 + wave2;
@@ -810,6 +936,11 @@
                     if (deformedData[i] < minTemp) deformedData[i] = minTemp;
                     if (deformedData[i] > maxTemp) deformedData[i] = maxTemp;
                 }
+            }
+            
+            // Suavizar la curva si está habilitado
+            if (smoothCurve) {
+                deformedData = smoothData(deformedData);
             }
             
             // Actualizar gráfico
@@ -832,7 +963,7 @@
             }
         }
 
-        // Descargar CSV con comas decimales
+        // Descargar CSV con comas decimales y un solo decimal
         function downloadCSV() {
             if (!temperatureChart || !temperatureChart.data.datasets[1].data.length) {
                 downloadStatus.textContent = "Error: No hay datos para descargar";
@@ -844,9 +975,9 @@
                 // Obtener la curva deformada actual
                 const deformedData = temperatureChart.data.datasets[1].data;
                 
-                // Crear contenido CSV con comas decimales
+                // Crear contenido CSV con comas decimales y un solo decimal
                 const csvContent = deformedData.map(value => 
-                    value.toFixed(4).replace('.', ',')
+                    value.toFixed(1).replace('.', ',')
                 ).join('\n');
                 
                 // Crear elemento de descarga
