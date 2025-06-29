@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Extrapolador de Datos de Temperatura</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
     <style>
         :root {
             --primary: #2c3e50;
@@ -228,6 +229,22 @@
         .error { background: #f8d7da; color: #721c24; }
         .warning { background: #fff3cd; color: #856404; }
         
+        .progress-container {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
         @media (max-width: 900px) {
             .main-content {
                 flex-direction: column;
@@ -247,7 +264,7 @@
     <div class="container">
         <header>
             <h1>Extrapolador de Datos de Temperatura</h1>
-            <p class="subtitle">Sube tus datos originales, ajusta los valores máximo y mínimo, y descarga el nuevo conjunto de datos extrapolados</p>
+            <p class="subtitle">Sube tus datos originales (577 mediciones), ajusta los valores y descarga el nuevo conjunto de datos</p>
         </header>
         
         <div class="main-content">
@@ -258,8 +275,11 @@
                         <label for="csvFile">Seleccionar archivo CSV:</label>
                         <input type="file" id="csvFile" accept=".csv">
                     </div>
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
                     <button id="loadBtn">Cargar Datos</button>
-                    <div id="loadStatus" class="status-message"></div>
+                    <div id="loadStatus" class="status-message">Esperando datos...</div>
                 </div>
                 
                 <div class="control-group">
@@ -318,7 +338,7 @@
         </div>
         
         <footer>
-            <p>Extrapolador de Datos de Temperatura | Los datos se procesan completamente en tu navegador</p>
+            <p>Extrapolador de Datos de Temperatura | Procesamiento optimizado para grandes conjuntos de datos</p>
         </footer>
     </div>
 
@@ -350,6 +370,8 @@
         const loadStatus = document.getElementById('loadStatus');
         const updateStatus = document.getElementById('updateStatus');
         const downloadStatus = document.getElementById('downloadStatus');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
 
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', () => {
@@ -381,13 +403,9 @@
             
             // Inicializar gráfico
             initChart();
-            
-            // Mensaje inicial
-            loadStatus.textContent = "Esperando datos...";
-            loadStatus.className = "status-message warning";
         });
 
-        // Inicializar gráfico
+        // Inicializar gráfico optimizado para grandes conjuntos de datos
         function initChart() {
             const ctx = document.getElementById('temperatureChart').getContext('2d');
             temperatureChart = new Chart(ctx, {
@@ -401,7 +419,7 @@
                             borderColor: '#3498db',
                             backgroundColor: 'rgba(52, 152, 219, 0.1)',
                             borderWidth: 2,
-                            pointRadius: 0,
+                            pointRadius: 0, // Sin puntos para mejorar rendimiento
                             tension: 0.4,
                             fill: true
                         },
@@ -411,7 +429,7 @@
                             borderColor: '#e74c3c',
                             backgroundColor: 'rgba(231, 76, 60, 0.1)',
                             borderWidth: 2,
-                            pointRadius: 0,
+                            pointRadius: 0, // Sin puntos para mejorar rendimiento
                             tension: 0.4,
                             fill: true
                         }
@@ -437,6 +455,12 @@
                             },
                             grid: {
                                 color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                // Mostrar solo cada 50 puntos para mejorar rendimiento
+                                callback: function(value, index) {
+                                    return index % 50 === 0 ? `M${index+1}` : '';
+                                }
                             }
                         }
                     },
@@ -446,18 +470,29 @@
                         },
                         tooltip: {
                             mode: 'index',
-                            intersect: false
+                            intersect: false,
+                            callbacks: {
+                                // Mostrar solo el valor en el tooltip
+                                title: function() { return ''; },
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}°C`;
+                                }
+                            }
                         }
                     },
                     interaction: {
                         intersect: false,
                         mode: 'index'
-                    }
+                    },
+                    // Optimizaciones de rendimiento
+                    animation: false,
+                    hover: { mode: null },
+                    elements: { line: { tension: 0 } }
                 }
             });
         }
 
-        // Cargar archivo CSV
+        // Cargar archivo CSV de manera eficiente
         function loadCSV() {
             const file = csvFileInput.files[0];
             if (!file) {
@@ -466,63 +501,80 @@
                 return;
             }
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const content = e.target.result;
-                    // Parsear CSV (asumiendo un valor por línea)
-                    originalData = content.split('\n')
-                        .map(line => line.trim())
-                        .filter(line => line !== '')
-                        .map(Number)
-                        .filter(num => !isNaN(num));
-                    
-                    if (originalData.length === 0) {
-                        throw new Error('El archivo CSV no contiene datos válidos');
+            // Mostrar barra de progreso
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            loadStatus.textContent = "Procesando datos...";
+            loadStatus.className = "status-message warning";
+            
+            // Usar PapaParse para procesamiento eficiente
+            Papa.parse(file, {
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                step: function(results, parser) {
+                    // Actualizar barra de progreso
+                    const progress = Math.round((results.meta.cursor / file.size) * 100);
+                    progressBar.style.width = `${progress}%`;
+                },
+                complete: function(results) {
+                    try {
+                        // Obtener solo los valores numéricos
+                        originalData = results.data.flat().filter(value => typeof value === 'number' && !isNaN(value));
+                        
+                        if (originalData.length === 0) {
+                            throw new Error('El archivo CSV no contiene datos numéricos válidos');
+                        }
+                        
+                        // Calcular min y max originales
+                        minOriginal = Math.min(...originalData);
+                        maxOriginal = Math.max(...originalData);
+                        
+                        // Establecer valores iniciales para extrapolación
+                        minTemp = minOriginal;
+                        maxTemp = maxOriginal;
+                        
+                        // Actualizar controles
+                        minTempInput.value = minOriginal.toFixed(1);
+                        maxTempInput.value = maxOriginal.toFixed(1);
+                        minTempRange.value = minOriginal.toFixed(1);
+                        maxTempRange.value = maxOriginal.toFixed(1);
+                        minTempRange.min = (minOriginal - 10).toFixed(1);
+                        maxTempRange.max = (maxOriginal + 10).toFixed(1);
+                        minTempValue.textContent = minOriginal.toFixed(1) + "°C";
+                        maxTempValue.textContent = maxOriginal.toFixed(1) + "°C";
+                        
+                        // Actualizar información
+                        originalMinElem.textContent = minOriginal.toFixed(1) + "°C";
+                        originalMaxElem.textContent = maxOriginal.toFixed(1) + "°C";
+                        newMinElem.textContent = minTemp.toFixed(1) + "°C";
+                        newMaxElem.textContent = maxTemp.toFixed(1) + "°C";
+                        
+                        // Realizar extrapolación inicial
+                        extrapolateData();
+                        
+                        // Actualizar gráfico
+                        updateChart();
+                        
+                        loadStatus.textContent = `Datos cargados: ${originalData.length} mediciones`;
+                        loadStatus.className = "status-message success";
+                        progressContainer.style.display = 'none';
+                        
+                    } catch (error) {
+                        loadStatus.textContent = 'Error al procesar el archivo: ' + error.message;
+                        loadStatus.className = "status-message error";
+                        progressContainer.style.display = 'none';
+                        console.error(error);
                     }
-                    
-                    // Calcular min y max originales
-                    minOriginal = Math.min(...originalData);
-                    maxOriginal = Math.max(...originalData);
-                    
-                    // Establecer valores iniciales para extrapolación
-                    minTemp = minOriginal;
-                    maxTemp = maxOriginal;
-                    
-                    // Actualizar controles
-                    minTempInput.value = minOriginal.toFixed(1);
-                    maxTempInput.value = maxOriginal.toFixed(1);
-                    minTempRange.value = minOriginal.toFixed(1);
-                    maxTempRange.value = maxOriginal.toFixed(1);
-                    minTempRange.min = (minOriginal - 10).toFixed(1);
-                    maxTempRange.max = (maxOriginal + 10).toFixed(1);
-                    minTempValue.textContent = minOriginal.toFixed(1) + "°C";
-                    maxTempValue.textContent = maxOriginal.toFixed(1) + "°C";
-                    
-                    // Actualizar información
-                    originalMinElem.textContent = minOriginal.toFixed(1) + "°C";
-                    originalMaxElem.textContent = maxOriginal.toFixed(1) + "°C";
-                    newMinElem.textContent = minTemp.toFixed(1) + "°C";
-                    newMaxElem.textContent = maxTemp.toFixed(1) + "°C";
-                    
-                    // Realizar extrapolación inicial
-                    extrapolateData();
-                    
-                    // Actualizar gráfico
-                    updateChart();
-                    
-                    loadStatus.textContent = `Datos cargados: ${originalData.length} mediciones`;
-                    loadStatus.className = "status-message success";
-                } catch (error) {
-                    loadStatus.textContent = 'Error al procesar el archivo: ' + error.message;
+                },
+                error: function(error) {
+                    loadStatus.textContent = 'Error al leer el archivo: ' + error.message;
                     loadStatus.className = "status-message error";
-                    console.error(error);
+                    progressContainer.style.display = 'none';
                 }
-            };
-            reader.readAsText(file);
+            });
         }
 
-        // Extrapolar datos
+        // Extrapolar datos eficientemente
         function extrapolateData() {
             if (originalData.length === 0) return;
             
@@ -532,19 +584,24 @@
             // Calcular el nuevo rango
             const newRange = maxTemp - minTemp;
             
+            // Crear array para datos extrapolados
+            extrapolatedData = new Array(originalData.length);
+            
             // Manejar caso cuando el rango original es cero
             if (originalRange === 0) {
-                // Si todos los valores son iguales, usamos el valor medio entre minTemp y maxTemp
+                // Si todos los valores son iguales, usar el valor medio
                 const avg = (minTemp + maxTemp) / 2;
-                extrapolatedData = originalData.map(() => avg);
+                for (let i = 0; i < originalData.length; i++) {
+                    extrapolatedData[i] = avg;
+                }
             } else {
                 // Escalar los datos al nuevo rango manteniendo la forma
-                extrapolatedData = originalData.map(value => {
+                for (let i = 0; i < originalData.length; i++) {
                     // Normalizar al rango [0, 1]
-                    const normalized = (value - minOriginal) / originalRange;
+                    const normalized = (originalData[i] - minOriginal) / originalRange;
                     // Aplicar al nuevo rango
-                    return minTemp + normalized * newRange;
-                });
+                    extrapolatedData[i] = minTemp + normalized * newRange;
+                }
             }
         }
 
@@ -596,11 +653,11 @@
             updateStatus.className = "status-message success";
         }
 
-        // Actualizar gráfico
+        // Actualizar gráfico optimizado para 577 puntos
         function updateChart() {
             if (temperatureChart && originalData.length > 0) {
-                // Crear etiquetas para el eje X
-                const labels = Array.from({length: originalData.length}, (_, i) => `M${i+1}`);
+                // Crear etiquetas para el eje X (solo cada 50 puntos para mejor rendimiento)
+                const labels = Array.from({length: originalData.length}, (_, i) => i % 50 === 0 ? `M${i+1}` : '');
                 
                 // Actualizar datos del gráfico
                 temperatureChart.data.labels = labels;
@@ -612,7 +669,7 @@
             }
         }
 
-        // Descargar CSV
+        // Descargar CSV eficientemente
         function downloadCSV() {
             if (extrapolatedData.length === 0) {
                 downloadStatus.textContent = "Error: No hay datos extrapolados para descargar";
@@ -621,8 +678,14 @@
             }
             
             try {
-                // Crear contenido CSV
-                const csvContent = extrapolatedData.map(value => value.toFixed(4)).join('\n');
+                // Crear contenido CSV en bloques para mejor rendimiento
+                const chunkSize = 1000;
+                let csvContent = "";
+                
+                for (let i = 0; i < extrapolatedData.length; i += chunkSize) {
+                    const chunk = extrapolatedData.slice(i, i + chunkSize);
+                    csvContent += chunk.map(value => value.toFixed(4)).join('\n') + '\n';
+                }
                 
                 // Crear elemento de descarga
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
