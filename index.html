@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrapolador con Efecto Elástico</title>
+    <title>Extrapolador con Efecto Elástico Mejorado</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -33,6 +33,7 @@
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
             min-height: 100vh;
             padding: 20px;
+            overflow-x: hidden;
         }
         
         .container {
@@ -52,12 +53,32 @@
             padding: 25px 40px;
             text-align: center;
             border-bottom: 3px solid var(--accent);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                rgba(255,255,255,0.1) 0%, 
+                rgba(255,255,255,0.05) 25%, 
+                transparent 50%, 
+                rgba(0,0,0,0.1) 75%, 
+                rgba(0,0,0,0.05) 100%);
+            pointer-events: none;
         }
         
         h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
         }
         
         .subtitle {
@@ -66,6 +87,8 @@
             max-width: 700px;
             margin: 0 auto;
             font-weight: 300;
+            position: relative;
+            z-index: 2;
         }
         
         .main-content {
@@ -94,6 +117,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             position: relative;
             margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
         }
         
         .control-group {
@@ -481,6 +505,14 @@
             border-radius: 10px;
             position: relative;
             overflow: hidden;
+            animation: elastic-pulse 1.5s infinite;
+            animation-delay: calc(var(--i) * 0.2s);
+        }
+        
+        @keyframes elastic-pulse {
+            0% { transform: scaleX(1); }
+            50% { transform: scaleX(0.4); }
+            100% { transform: scaleX(1); }
         }
         
         .elastic-demo:before {
@@ -527,24 +559,32 @@
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
+        
+        .elastic-effect-info {
+            background: rgba(230, 126, 34, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 3px solid var(--elastic);
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-wave-square"></i> Extrapolador con Efecto Elástico</h1>
-            <p class="subtitle">Crea pequeñas ondulaciones en zonas planas como si estuvieras arrugando un elástico</p>
+            <h1><i class="fas fa-wave-square"></i> Extrapolador con Efecto Elástico Mejorado</h1>
+            <p class="subtitle">¡Crea ondulaciones más pronunciadas en zonas planas como si estuvieras arrugando un elástico con fuerza!</p>
         </header>
         
         <div class="main-content">
             <div class="controls">
                 <div class="instructions">
-                    <h3><i class="fas fa-lightbulb"></i> ¡Nuevo Efecto Elástico!</h3>
+                    <h3><i class="fas fa-lightbulb"></i> ¡Efecto Elástico Mejorado!</h3>
                     <ul>
                         <li>Sube tu archivo CSV con valores de temperatura (un valor por línea)</li>
                         <li>Usa comas como separador decimal (ej: 23,5)</li>
                         <li>Ajusta los valores mínimos y máximos deseados</li>
-                        <li><strong>Prueba el nuevo efecto elástico para crear ondulaciones en zonas planas</strong></li>
+                        <li><strong>¡Prueba el nuevo efecto elástico mejorado para crear ondulaciones más pronunciadas!</strong></li>
                         <li>Descarga los datos cuando estés satisfecho</li>
                     </ul>
                 </div>
@@ -661,19 +701,23 @@
                     
                     <div class="deformation-intensity">
                         <span>Sin Efecto</span>
-                        <input type="range" id="elasticEffect" min="0" max="100" value="0">
+                        <input type="range" id="elasticEffect" min="0" max="100" value="70">
                         <span>Máximo Efecto</span>
-                        <span id="elasticPercent">0%</span>
+                        <span id="elasticPercent">70%</span>
                     </div>
                     <div class="deformation-description">
                         <div class="elastic-title">
-                            <i class="fas fa-band-aid"></i> Efecto Elástico - Crea mini ondulaciones en zonas planas
+                            <i class="fas fa-band-aid"></i> Efecto Elástico - Crea ondulaciones pronunciadas en zonas planas
                         </div>
                         <div class="elastic-preview">
-                            <div class="elastic-demo"></div>
-                            <div class="elastic-demo" style="transform: scaleX(0.8);"></div>
-                            <div class="elastic-demo" style="transform: scaleX(0.6);"></div>
-                            <div class="elastic-demo" style="transform: scaleX(0.4);"></div>
+                            <div class="elastic-demo" style="--i: 0"></div>
+                            <div class="elastic-demo" style="--i: 1"></div>
+                            <div class="elastic-demo" style="--i: 2"></div>
+                            <div class="elastic-demo" style="--i: 3"></div>
+                            <div class="elastic-demo" style="--i: 4"></div>
+                        </div>
+                        <div class="elastic-effect-info">
+                            <i class="fas fa-info-circle"></i> ¡El efecto elástico ha sido aumentado! Ahora las ondulaciones son más pronunciadas y visibles.
                         </div>
                     </div>
                 </div>
@@ -681,7 +725,7 @@
         </div>
         
         <footer>
-            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado con Efecto Elástico | Crea curvas más realistas con micro-variaciones</p>
+            <p><i class="fas fa-info-circle"></i> Extrapolador con Efecto Elástico Mejorado | Ondulaciones más pronunciadas en zonas planas</p>
         </footer>
     </div>
 
@@ -696,7 +740,7 @@
         let deformationLevel = 0.5;
         let horizontalDeformation = 0.5;
         let verticalDeformation = 0.5;
-        let elasticEffect = 0;
+        let elasticEffect = 0.7; // Valor inicial aumentado para efecto más visible
         let noiseSeed = Date.now();
         let smoothCurve = true;
         let autoAdjust = true;
@@ -752,7 +796,7 @@
         }
 
         // Detectar zonas planas (para el efecto elástico)
-        function detectFlatZones(data, threshold = 0.02) {
+        function detectFlatZones(data, threshold = 0.01) { // Umbral reducido para detectar más zonas
             const flatZones = [];
             const derivative = [];
             
@@ -763,7 +807,7 @@
             
             // Identificar zonas planas (donde la derivada es pequeña)
             for (let i = 1; i < derivative.length; i++) {
-                if (derivative[i] < threshold) {
+                if (derivative[i] < threshold * (maxTemp - minTemp)) {
                     flatZones.push(i);
                 }
             }
@@ -771,18 +815,23 @@
             return flatZones;
         }
 
-        // Aplicar efecto elástico a zonas planas
+        // Aplicar efecto elástico a zonas planas (MEJORADO)
         function applyElasticEffect(data, intensity) {
             if (intensity <= 0) return data;
             
             const newData = [...data];
-            const flatZones = detectFlatZones(data, 0.02 * (maxTemp - minTemp));
-            const amplitude = intensity * 0.05 * (maxTemp - minTemp);
+            const flatZones = detectFlatZones(data);
+            const amplitude = intensity * 0.15 * (maxTemp - minTemp); // Amplitud aumentada
             
             flatZones.forEach(index => {
-                // Crear una pequeña ondulación sinusoidal
-                const wave = Math.sin(index * 0.3) * amplitude * noise(index);
-                newData[index] += wave;
+                // Crear una ondulación más pronunciada con múltiples frecuencias
+                const wave1 = Math.sin(index * 0.5) * amplitude * noise(index);
+                const wave2 = Math.cos(index * 0.8) * amplitude * 0.7 * noise(index*1.3);
+                const wave3 = Math.sin(index * 1.2) * amplitude * 0.5 * noise(index*1.7);
+                
+                const combinedWave = (wave1 + wave2 + wave3) / 2.2;
+                
+                newData[index] += combinedWave;
                 
                 // Mantener dentro de los límites
                 if (newData[index] < minTemp) newData[index] = minTemp;
@@ -1130,7 +1179,7 @@
                 }
             }
             
-            // Aplicar efecto elástico en zonas planas
+            // Aplicar efecto elástico mejorado en zonas planas
             if (elasticEffect > 0) {
                 deformedData = applyElasticEffect(deformedData, elasticEffect);
             }
