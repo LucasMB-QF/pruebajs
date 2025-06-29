@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrapolador de Temperatura con Variación en Tiempo Real</title>
+    <title>Extrapolador con Deformación Avanzada de Curvas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -78,11 +78,12 @@
         .chart-container {
             flex: 2;
             min-width: 600px;
-            height: 600px;
+            height: 500px;
             background: white;
             border-radius: 10px;
             padding: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
         }
         
         .control-group {
@@ -168,14 +169,6 @@
             background: var(--accent);
             box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
         }
-        #variationRange::-webkit-slider-thumb { 
-            background: var(--variation);
-            box-shadow: 0 0 0 2px rgba(155, 89, 182, 0.2);
-        }
-        #smoothnessRange::-webkit-slider-thumb { 
-            background: #f39c12;
-            box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
-        }
         
         button {
             display: block;
@@ -213,10 +206,6 @@
         
         #downloadBtn {
             background: var(--success);
-        }
-        
-        #randomBtn {
-            background: #f39c12;
         }
         
         .data-info {
@@ -291,12 +280,6 @@
             transition: width 0.3s;
         }
         
-        .variation-control {
-            border-left: 4px solid var(--variation);
-            padding-left: 10px;
-            margin-top: 15px;
-        }
-        
         .instructions {
             background: #e3f2fd;
             padding: 15px;
@@ -319,15 +302,19 @@
             margin-bottom: 5px;
         }
         
-        .real-time-controls {
+        .deformation-controls {
             background: #f8f9fa;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
             margin-top: 20px;
             border: 1px solid #e9ecef;
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
         }
         
-        .real-time-controls h3 {
+        .deformation-controls h3 {
             margin-top: 0;
             margin-bottom: 15px;
             color: var(--primary);
@@ -335,18 +322,18 @@
             align-items: center;
         }
         
-        .real-time-controls h3 i {
+        .deformation-controls h3 i {
             margin-right: 10px;
             color: var(--variation);
         }
         
-        .variation-intensity {
+        .deformation-intensity {
             display: flex;
             align-items: center;
             gap: 15px;
         }
         
-        .variation-intensity input[type="range"] {
+        .deformation-intensity input[type="range"] {
             flex: 1;
             height: 10px;
             -webkit-appearance: none;
@@ -355,7 +342,7 @@
             outline: none;
         }
         
-        .variation-intensity input[type="range"]::-webkit-slider-thumb {
+        .deformation-intensity input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 25px;
             height: 25px;
@@ -365,11 +352,17 @@
             box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.3);
         }
         
-        .variation-intensity span {
+        .deformation-intensity span {
             min-width: 40px;
             text-align: center;
             font-weight: bold;
             color: var(--variation);
+        }
+        
+        .deformation-description {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #6c757d;
         }
         
         @media (max-width: 1000px) {
@@ -379,7 +372,15 @@
             
             .chart-container {
                 min-width: 100%;
-                height: 400px;
+                height: 500px;
+            }
+            
+            .deformation-controls {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                right: auto;
+                margin-top: 10px;
             }
         }
     </style>
@@ -387,8 +388,8 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-chart-line"></i> Extrapolador de Temperatura con Variación en Tiempo Real</h1>
-            <p class="subtitle">Controla la forma de la curva con el deslizador inferior - ¡Actualización instantánea!</p>
+            <h1><i class="fas fa-wave-square"></i> Extrapolador con Deformación Avanzada de Curvas</h1>
+            <p class="subtitle">Controla la deformación de la curva con el deslizador debajo del gráfico - ¡Actualización instantánea!</p>
         </header>
         
         <div class="main-content">
@@ -399,7 +400,7 @@
                         <li><i class="fas fa-check"></i> Sube tu archivo CSV con valores de temperatura (un valor por línea)</li>
                         <li><i class="fas fa-check"></i> Usa comas como separador decimal (ej: 23,5)</li>
                         <li><i class="fas fa-check"></i> Ajusta los valores mínimos y máximos deseados</li>
-                        <li><i class="fas fa-check"></i> <strong>Desliza el control inferior para variar la forma de la curva en tiempo real</strong></li>
+                        <li><i class="fas fa-check"></i> <strong>Desliza el control debajo del gráfico para deformar completamente la curva</strong></li>
                         <li><i class="fas fa-check"></i> Descarga los datos cuando estés satisfecho</li>
                     </ul>
                 </div>
@@ -436,8 +437,6 @@
                             <span id="maxTempValue">--</span>
                         </div>
                     </div>
-                    
-                    <button id="updateBtn" style="display: none;">Actualizar</button>
                 </div>
                 
                 <div class="control-group">
@@ -468,35 +467,35 @@
             
             <div class="chart-container">
                 <canvas id="temperatureChart"></canvas>
+                <div class="deformation-controls">
+                    <h3><i class="fas fa-sliders-h"></i> Control de Deformación</h3>
+                    <div class="deformation-intensity">
+                        <span>Forma Original</span>
+                        <input type="range" id="shapeDeformation" min="0" max="100" value="50">
+                        <span>Máxima Deformación</span>
+                        <span id="deformationPercent">50%</span>
+                    </div>
+                    <div class="deformation-description">
+                        <p><i class="fas fa-info-circle"></i> Desliza para deformar completamente la curva - Altera subidas, bajadas y picos</p>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <div class="real-time-controls">
-            <h3><i class="fas fa-sliders-h"></i> Control de Variación en Tiempo Real</h3>
-            <div class="variation-intensity">
-                <span>Forma Original</span>
-                <input type="range" id="shapeVariation" min="0" max="100" value="50">
-                <span>Máxima Variación</span>
-                <span id="variationPercent">50%</span>
-            </div>
-            <p><i class="fas fa-info-circle"></i> Desliza para cambiar la forma de la curva - La actualización es instantánea</p>
         </div>
         
         <footer>
-            <p><i class="fas fa-info-circle"></i> Extrapolador de Datos de Temperatura | Variación de forma en tiempo real</p>
+            <p><i class="fas fa-info-circle"></i> Extrapolador de Datos de Temperatura | Deformación avanzada en tiempo real</p>
         </footer>
     </div>
 
     <script>
         // Variables globales
         let originalData = [];
-        let extrapolatedData = [];
         let minOriginal = 0;
         let maxOriginal = 0;
         let minTemp = 0;
         let maxTemp = 0;
         let temperatureChart = null;
-        let shapeVariation = 0.5;
+        let deformationLevel = 0.5;
         let noiseSeed = Date.now();
 
         // Elementos del DOM
@@ -517,8 +516,14 @@
         const downloadStatus = document.getElementById('downloadStatus');
         const progressContainer = document.getElementById('progressContainer');
         const progressBar = document.getElementById('progressBar');
-        const shapeVariationSlider = document.getElementById('shapeVariation');
-        const variationPercent = document.getElementById('variationPercent');
+        const shapeDeformationSlider = document.getElementById('shapeDeformation');
+        const deformationPercent = document.getElementById('deformationPercent');
+
+        // Función de ruido pseudoaleatorio (para variaciones consistentes)
+        function noise(index) {
+            const x = Math.sin(index * 12.9898 + noiseSeed) * 43758.5453;
+            return x - Math.floor(x);
+        }
 
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', () => {
@@ -553,11 +558,11 @@
                 updateExtrapolation();
             });
             
-            // Control de variación en tiempo real
-            shapeVariationSlider.addEventListener('input', () => {
-                shapeVariation = shapeVariationSlider.value / 100;
-                variationPercent.textContent = shapeVariationSlider.value + '%';
-                applyShapeVariation();
+            // Control de deformación en tiempo real
+            shapeDeformationSlider.addEventListener('input', () => {
+                deformationLevel = shapeDeformationSlider.value / 100;
+                deformationPercent.textContent = shapeDeformationSlider.value + '%';
+                applyShapeDeformation();
             });
             
             // Inicializar gráfico
@@ -567,12 +572,6 @@
             loadStatus.textContent = "Esperando datos...";
             loadStatus.className = "status-message warning";
         });
-
-        // Función de ruido pseudoaleatorio (para variaciones consistentes)
-        function noise(index) {
-            const x = Math.sin(index * 12.9898 + noiseSeed) * 43758.5453;
-            return x - Math.floor(x);
-        }
 
         // Inicializar gráfico
         function initChart() {
@@ -593,25 +592,14 @@
                             fill: false
                         },
                         {
-                            label: 'Curva Extrapolada',
+                            label: 'Curva Deformada',
                             data: [],
                             borderColor: '#e74c3c',
                             backgroundColor: 'rgba(231, 76, 60, 0.1)',
                             borderWidth: 3,
                             pointRadius: 0,
                             tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: 'Curva Variada',
-                            data: [],
-                            borderColor: '#9b59b6',
-                            backgroundColor: 'rgba(155, 89, 182, 0.1)',
-                            borderWidth: 3,
-                            pointRadius: 0,
-                            tension: 0.4,
-                            fill: false,
-                            borderDash: [5, 5]
+                            fill: false
                         }
                     ]
                 },
@@ -774,6 +762,14 @@
             newMinElem.textContent = minTemp.toFixed(1).replace('.', ',') + "°C";
             newMaxElem.textContent = maxTemp.toFixed(1).replace('.', ',') + "°C";
             
+            // Aplicar deformación
+            applyShapeDeformation();
+        }
+        
+        // Aplicar deformación a la forma de la curva
+        function applyShapeDeformation() {
+            if (originalData.length === 0) return;
+            
             // Calcular el rango original
             const originalRange = maxOriginal - minOriginal;
             
@@ -781,66 +777,53 @@
             const newRange = maxTemp - minTemp;
             
             // Crear array para datos extrapolados
-            extrapolatedData = new Array(originalData.length);
+            let deformedData = new Array(originalData.length);
             
             // Manejar caso cuando el rango original es cero
             if (originalRange === 0) {
                 const avg = (minTemp + maxTemp) / 2;
                 for (let i = 0; i < originalData.length; i++) {
-                    extrapolatedData[i] = avg;
+                    deformedData[i] = avg;
                 }
             } else {
                 // Escalar los datos al nuevo rango
                 for (let i = 0; i < originalData.length; i++) {
                     const normalized = (originalData[i] - minOriginal) / originalRange;
-                    extrapolatedData[i] = minTemp + normalized * newRange;
+                    deformedData[i] = minTemp + normalized * newRange;
                 }
             }
             
-            // Aplicar variación
-            applyShapeVariation();
-        }
-        
-        // Aplicar variación a la forma de la curva
-        function applyShapeVariation() {
-            if (extrapolatedData.length === 0) return;
-            
-            // Crear una versión variada de los datos extrapolados
-            const variedData = [...extrapolatedData];
-            const dataLength = variedData.length;
-            
-            // Solo aplicar variación si el control no está en 0%
-            if (shapeVariation > 0) {
-                // Calcular la amplitud máxima de variación basada en el rango de temperatura
-                const amplitude = (maxTemp - minTemp) * 0.15 * shapeVariation;
+            // Aplicar deformación avanzada
+            if (deformationLevel > 0) {
+                const amplitude = (maxTemp - minTemp) * 0.3 * deformationLevel;
+                const frequency = 0.05 + deformationLevel * 0.1;
                 
-                // Aplicar variación controlada
-                for (let i = 1; i < dataLength - 1; i++) {
-                    // Calcular una variación basada en la posición en la curva
-                    const positionFactor = i / dataLength;
-                    const waveFactor = Math.sin(positionFactor * Math.PI * 4);
+                for (let i = 0; i < deformedData.length; i++) {
+                    // Ruido para deformación aleatoria
+                    const noiseFactor = noise(i) * 2 - 1;
                     
-                    // Variación basada en ruido pseudoaleatorio
-                    const noiseFactor = (noise(i) - 0.5) * 2;
+                    // Ondas para deformación estructurada
+                    const wave1 = Math.sin(i * frequency) * amplitude;
+                    const wave2 = Math.cos(i * frequency * 0.7) * amplitude * 0.6;
                     
-                    // Combinar factores de variación
-                    const totalVariation = (waveFactor * 0.7 + noiseFactor * 0.3) * amplitude;
+                    // Combinar efectos
+                    const deformation = noiseFactor * amplitude * 0.5 + wave1 + wave2;
                     
-                    // Aplicar variación
-                    variedData[i] += totalVariation;
+                    // Aplicar deformación
+                    deformedData[i] += deformation;
                     
                     // Mantener dentro de los límites
-                    if (variedData[i] < minTemp) variedData[i] = minTemp;
-                    if (variedData[i] > maxTemp) variedData[i] = maxTemp;
+                    if (deformedData[i] < minTemp) deformedData[i] = minTemp;
+                    if (deformedData[i] > maxTemp) deformedData[i] = maxTemp;
                 }
             }
             
             // Actualizar gráfico
-            updateChart(extrapolatedData, variedData);
+            updateChart(deformedData);
         }
 
         // Actualizar gráfico
-        function updateChart(extrapolated = [], varied = []) {
+        function updateChart(deformedData = []) {
             if (temperatureChart && originalData.length > 0) {
                 // Crear etiquetas para el eje X
                 const labels = Array.from({length: originalData.length}, (_, i) => i % 50 === 0 ? `M${i+1}` : '');
@@ -848,8 +831,7 @@
                 // Actualizar datos del gráfico
                 temperatureChart.data.labels = labels;
                 temperatureChart.data.datasets[0].data = originalData;
-                temperatureChart.data.datasets[1].data = extrapolated.length ? extrapolated : extrapolatedData;
-                temperatureChart.data.datasets[2].data = varied.length ? varied : extrapolatedData;
+                temperatureChart.data.datasets[1].data = deformedData;
                 
                 // Actualizar el gráfico
                 temperatureChart.update();
@@ -858,18 +840,18 @@
 
         // Descargar CSV con comas decimales
         function downloadCSV() {
-            if (extrapolatedData.length === 0) {
-                downloadStatus.textContent = "Error: No hay datos extrapolados para descargar";
+            if (!temperatureChart || !temperatureChart.data.datasets[1].data.length) {
+                downloadStatus.textContent = "Error: No hay datos para descargar";
                 downloadStatus.className = "status-message error";
                 return;
             }
             
             try {
-                // Obtener la curva variada actual
-                const variedData = temperatureChart.data.datasets[2].data;
+                // Obtener la curva deformada actual
+                const deformedData = temperatureChart.data.datasets[1].data;
                 
                 // Crear contenido CSV con comas decimales
-                const csvContent = variedData.map(value => 
+                const csvContent = deformedData.map(value => 
                     value.toFixed(4).replace('.', ',')
                 ).join('\n');
                 
