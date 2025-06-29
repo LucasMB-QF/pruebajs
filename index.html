@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrapolador Avanzado con Controles de Deformación</title>
+    <title>Extrapolador con Efecto Elástico</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -17,6 +17,7 @@
             --variation: #9b59b6;
             --horizontal: #1abc9c;
             --vertical: #f1c40f;
+            --elastic: #e67e22;
         }
         
         * {
@@ -29,7 +30,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: var(--dark);
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
             min-height: 100vh;
             padding: 20px;
         }
@@ -37,29 +38,34 @@
         .container {
             max-width: 1400px;
             margin: 0 auto;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
             overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         header {
-            background: var(--primary);
+            background: linear-gradient(to right, #2c3e50, #4a6491);
             color: white;
             padding: 25px 40px;
             text-align: center;
+            border-bottom: 3px solid var(--accent);
         }
         
         h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         
         .subtitle {
             font-size: 1.1rem;
-            opacity: 0.8;
+            opacity: 0.9;
             max-width: 700px;
             margin: 0 auto;
+            font-weight: 300;
         }
         
         .main-content {
@@ -75,6 +81,7 @@
             padding: 20px;
             background: var(--light);
             border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
         
         .chart-container {
@@ -133,11 +140,13 @@
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s;
+            background: white;
         }
         
         input[type="text"]:focus, input[type="file"]:focus {
             border-color: var(--secondary);
             outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
         }
         
         .range-container {
@@ -162,15 +171,14 @@
             border-radius: 50%;
             cursor: pointer;
             transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
         #minTempRange::-webkit-slider-thumb { 
             background: var(--secondary);
-            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
         #maxTempRange::-webkit-slider-thumb { 
             background: var(--accent);
-            box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
         }
         
         button {
@@ -188,6 +196,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
         button i {
@@ -195,20 +204,20 @@
         }
         
         button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
         }
         
         button:active {
-            transform: translateY(0);
+            transform: translateY(1px);
         }
         
         #loadBtn {
-            background: var(--secondary);
+            background: linear-gradient(to right, #3498db, #2980b9);
         }
         
         #downloadBtn {
-            background: var(--success);
+            background: linear-gradient(to right, #2ecc71, #27ae60);
         }
         
         .data-info {
@@ -223,12 +232,14 @@
             background: white;
             border-radius: 10px;
             padding: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s;
+            border: 1px solid rgba(0,0,0,0.05);
         }
         
         .info-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
         }
         
         .info-card h3 {
@@ -253,6 +264,7 @@
             color: var(--dark);
             font-size: 0.9rem;
             border-top: 1px solid rgba(0, 0, 0, 0.1);
+            background: rgba(236, 240, 241, 0.7);
         }
         
         .status-message {
@@ -284,11 +296,12 @@
         }
         
         .instructions {
-            background: #e3f2fd;
+            background: linear-gradient(to right, #e3f2fd, #bbdefb);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
             font-size: 0.9rem;
+            border-left: 4px solid var(--secondary);
         }
         
         .instructions h3 {
@@ -303,52 +316,73 @@
         
         .instructions li {
             margin-bottom: 5px;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: var(--secondary);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-size: 1.2em;
         }
         
         .deformation-controls {
             background: #f8f9fa;
-            padding: 15px;
+            padding: 20px;
             border-radius: 10px;
             border: 1px solid #e9ecef;
             margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
         
         .deformation-controls h3 {
             margin-top: 0;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             color: var(--primary);
             display: flex;
             align-items: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
         }
         
         .deformation-controls h3 i {
             margin-right: 10px;
             color: var(--variation);
+            font-size: 1.4em;
         }
         
         .deformation-intensity {
             display: flex;
             align-items: center;
             gap: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 8px;
         }
         
         .deformation-intensity input[type="range"] {
             flex: 1;
-            height: 10px;
+            height: 12px;
             -webkit-appearance: none;
-            background: #dee2e6;
-            border-radius: 5px;
+            background: linear-gradient(to right, #e0e0e0, #d0d0d0);
+            border-radius: 10px;
             outline: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
         
         .deformation-intensity input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 25px;
-            height: 25px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.3);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            border: 2px solid white;
         }
         
         #shapeDeformation::-webkit-slider-thumb {
@@ -363,34 +397,54 @@
             background: var(--vertical);
         }
         
+        #elasticEffect::-webkit-slider-thumb {
+            background: var(--elastic);
+        }
+        
         .deformation-intensity span {
             min-width: 40px;
             text-align: center;
             font-weight: bold;
+            font-size: 0.9em;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(0,0,0,0.03);
         }
         
         #deformationPercent {
             color: var(--variation);
+            background: rgba(155, 89, 182, 0.1);
         }
         
         #horizontalPercent {
             color: var(--horizontal);
+            background: rgba(26, 188, 156, 0.1);
         }
         
         #verticalPercent {
             color: var(--vertical);
+            background: rgba(241, 196, 15, 0.1);
+        }
+        
+        #elasticPercent {
+            color: var(--elastic);
+            background: rgba(230, 126, 34, 0.1);
         }
         
         .deformation-description {
-            margin-top: 10px;
+            margin-top: 5px;
             font-size: 0.85rem;
-            color: #6c757d;
+            color: #5a6268;
+            padding: 0 10px;
+            font-style: italic;
         }
         
         .toggle-group {
             display: flex;
             justify-content: space-between;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         
         .toggle-label {
@@ -398,10 +452,51 @@
             align-items: center;
             cursor: pointer;
             font-weight: 500;
+            background: rgba(0,0,0,0.03);
+            padding: 8px 12px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-label:hover {
+            background: rgba(0,0,0,0.06);
         }
         
         .toggle-label input {
             margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .elastic-preview {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 10px;
+        }
+        
+        .elastic-demo {
+            width: 20px;
+            height: 10px;
+            background: var(--elastic);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .elastic-demo:before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                to right,
+                transparent,
+                transparent 3px,
+                rgba(255,255,255,0.5) 3px,
+                rgba(255,255,255,0.5) 6px
+            );
         }
         
         @media (max-width: 1000px) {
@@ -414,25 +509,43 @@
                 height: 500px;
             }
         }
+        
+        .elastic-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .elastic-title i {
+            color: var(--elastic);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-wave-square"></i> Extrapolador Avanzado con Controles de Deformación</h1>
-            <p class="subtitle">Controla la deformación horizontal, vertical y de forma para crear extrapolaciones creíbles</p>
+            <h1><i class="fas fa-wave-square"></i> Extrapolador con Efecto Elástico</h1>
+            <p class="subtitle">Crea pequeñas ondulaciones en zonas planas como si estuvieras arrugando un elástico</p>
         </header>
         
         <div class="main-content">
             <div class="controls">
                 <div class="instructions">
-                    <h3><i class="fas fa-lightbulb"></i> Instrucciones:</h3>
+                    <h3><i class="fas fa-lightbulb"></i> ¡Nuevo Efecto Elástico!</h3>
                     <ul>
-                        <li><i class="fas fa-check"></i> Sube tu archivo CSV con valores de temperatura (un valor por línea)</li>
-                        <li><i class="fas fa-check"></i> Usa comas como separador decimal (ej: 23,5)</li>
-                        <li><i class="fas fa-check"></i> Ajusta los valores mínimos y máximos deseados</li>
-                        <li><i class="fas fa-check"></i> <strong>Usa los controles de deformación para ajustar la curva</strong></li>
-                        <li><i class="fas fa-check"></i> Descarga los datos cuando estés satisfecho</li>
+                        <li>Sube tu archivo CSV con valores de temperatura (un valor por línea)</li>
+                        <li>Usa comas como separador decimal (ej: 23,5)</li>
+                        <li>Ajusta los valores mínimos y máximos deseados</li>
+                        <li><strong>Prueba el nuevo efecto elástico para crear ondulaciones en zonas planas</strong></li>
+                        <li>Descarga los datos cuando estés satisfecho</li>
                     </ul>
                 </div>
                 
@@ -503,7 +616,7 @@
                 
                 <!-- Controles de deformación -->
                 <div class="deformation-controls">
-                    <h3><i class="fas fa-sliders-h"></i> Controles Avanzados de Deformación</h3>
+                    <h3><i class="fas fa-sliders-h"></i> Controles de Deformación</h3>
                     
                     <div class="toggle-group">
                         <label class="toggle-label">
@@ -523,7 +636,7 @@
                         <span id="deformationPercent">50%</span>
                     </div>
                     <div class="deformation-description">
-                        <p><i class="fas fa-info-circle"></i> Deformación de forma - Altera subidas, bajadas y picos</p>
+                        Deformación de forma - Altera subidas, bajadas y picos
                     </div>
                     
                     <div class="deformation-intensity">
@@ -533,7 +646,7 @@
                         <span id="horizontalPercent">50%</span>
                     </div>
                     <div class="deformation-description">
-                        <p><i class="fas fa-info-circle"></i> Deformación horizontal - Controla la distribución temporal</p>
+                        Deformación horizontal - Controla la distribución temporal
                     </div>
                     
                     <div class="deformation-intensity">
@@ -543,14 +656,32 @@
                         <span id="verticalPercent">50%</span>
                     </div>
                     <div class="deformation-description">
-                        <p><i class="fas fa-info-circle"></i> Deformación vertical - Controla la amplitud de las variaciones</p>
+                        Deformación vertical - Controla la amplitud de las variaciones
+                    </div>
+                    
+                    <div class="deformation-intensity">
+                        <span>Sin Efecto</span>
+                        <input type="range" id="elasticEffect" min="0" max="100" value="0">
+                        <span>Máximo Efecto</span>
+                        <span id="elasticPercent">0%</span>
+                    </div>
+                    <div class="deformation-description">
+                        <div class="elastic-title">
+                            <i class="fas fa-band-aid"></i> Efecto Elástico - Crea mini ondulaciones en zonas planas
+                        </div>
+                        <div class="elastic-preview">
+                            <div class="elastic-demo"></div>
+                            <div class="elastic-demo" style="transform: scaleX(0.8);"></div>
+                            <div class="elastic-demo" style="transform: scaleX(0.6);"></div>
+                            <div class="elastic-demo" style="transform: scaleX(0.4);"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
         <footer>
-            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado de Datos de Temperatura | Controles de deformación en tiempo real</p>
+            <p><i class="fas fa-info-circle"></i> Extrapolador Avanzado con Efecto Elástico | Crea curvas más realistas con micro-variaciones</p>
         </footer>
     </div>
 
@@ -565,6 +696,7 @@
         let deformationLevel = 0.5;
         let horizontalDeformation = 0.5;
         let verticalDeformation = 0.5;
+        let elasticEffect = 0;
         let noiseSeed = Date.now();
         let smoothCurve = true;
         let autoAdjust = true;
@@ -590,9 +722,11 @@
         const shapeDeformationSlider = document.getElementById('shapeDeformation');
         const horizontalDeformationSlider = document.getElementById('horizontalDeformation');
         const verticalDeformationSlider = document.getElementById('verticalDeformation');
+        const elasticEffectSlider = document.getElementById('elasticEffect');
         const deformationPercent = document.getElementById('deformationPercent');
         const horizontalPercent = document.getElementById('horizontalPercent');
         const verticalPercent = document.getElementById('verticalPercent');
+        const elasticPercent = document.getElementById('elasticPercent');
         const smoothCurveCheckbox = document.getElementById('smoothCurve');
         const autoAdjustCheckbox = document.getElementById('autoAdjust');
 
@@ -615,6 +749,47 @@
                 smoothed[i] = sum / (end - start);
             }
             return smoothed;
+        }
+
+        // Detectar zonas planas (para el efecto elástico)
+        function detectFlatZones(data, threshold = 0.02) {
+            const flatZones = [];
+            const derivative = [];
+            
+            // Calcular derivada (cambio entre puntos consecutivos)
+            for (let i = 1; i < data.length; i++) {
+                derivative[i] = Math.abs(data[i] - data[i-1]);
+            }
+            
+            // Identificar zonas planas (donde la derivada es pequeña)
+            for (let i = 1; i < derivative.length; i++) {
+                if (derivative[i] < threshold) {
+                    flatZones.push(i);
+                }
+            }
+            
+            return flatZones;
+        }
+
+        // Aplicar efecto elástico a zonas planas
+        function applyElasticEffect(data, intensity) {
+            if (intensity <= 0) return data;
+            
+            const newData = [...data];
+            const flatZones = detectFlatZones(data, 0.02 * (maxTemp - minTemp));
+            const amplitude = intensity * 0.05 * (maxTemp - minTemp);
+            
+            flatZones.forEach(index => {
+                // Crear una pequeña ondulación sinusoidal
+                const wave = Math.sin(index * 0.3) * amplitude * noise(index);
+                newData[index] += wave;
+                
+                // Mantener dentro de los límites
+                if (newData[index] < minTemp) newData[index] = minTemp;
+                if (newData[index] > maxTemp) newData[index] = maxTemp;
+            });
+            
+            return newData;
         }
 
         // Inicializar la aplicación
@@ -669,6 +844,12 @@
                 applyShapeDeformation();
             });
             
+            elasticEffectSlider.addEventListener('input', () => {
+                elasticEffect = elasticEffectSlider.value / 100;
+                elasticPercent.textContent = elasticEffectSlider.value + '%';
+                applyShapeDeformation();
+            });
+            
             // Controles de opciones
             smoothCurveCheckbox.addEventListener('change', () => {
                 smoothCurve = smoothCurveCheckbox.checked;
@@ -717,7 +898,7 @@
                             backgroundColor: 'rgba(231, 76, 60, 0.1)',
                             borderWidth: 3,
                             pointRadius: 0,
-                            tension: 0.5, // Mayor tensión para curva más suave
+                            tension: 0.5,
                             fill: false
                         }
                     ]
@@ -729,7 +910,10 @@
                         y: {
                             title: {
                                 display: true,
-                                text: 'Temperatura (°C)'
+                                text: 'Temperatura (°C)',
+                                font: {
+                                    weight: 'bold'
+                                }
                             },
                             grid: {
                                 color: 'rgba(0, 0, 0, 0.05)'
@@ -738,7 +922,10 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Mediciones (cada 10 minutos)'
+                                text: 'Mediciones (cada 10 minutos)',
+                                font: {
+                                    weight: 'bold'
+                                }
                             },
                             grid: {
                                 color: 'rgba(0, 0, 0, 0.05)'
@@ -751,6 +938,11 @@
                     plugins: {
                         legend: {
                             position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
                         },
                         tooltip: {
                             mode: 'index',
@@ -936,6 +1128,11 @@
                     if (deformedData[i] < minTemp) deformedData[i] = minTemp;
                     if (deformedData[i] > maxTemp) deformedData[i] = maxTemp;
                 }
+            }
+            
+            // Aplicar efecto elástico en zonas planas
+            if (elasticEffect > 0) {
+                deformedData = applyElasticEffect(deformedData, elasticEffect);
             }
             
             // Suavizar la curva si está habilitado
