@@ -216,6 +216,18 @@
             border-top: 1px solid rgba(0, 0, 0, 0.1);
         }
         
+        .status-message {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        
         @media (max-width: 900px) {
             .main-content {
                 flex-direction: column;
@@ -247,6 +259,7 @@
                         <input type="file" id="csvFile" accept=".csv">
                     </div>
                     <button id="loadBtn">Cargar Datos</button>
+                    <div id="loadStatus" class="status-message"></div>
                 </div>
                 
                 <div class="control-group">
@@ -270,11 +283,13 @@
                     </div>
                     
                     <button id="updateBtn">Actualizar Extrapolación</button>
+                    <div id="updateStatus" class="status-message"></div>
                 </div>
                 
                 <div class="control-group">
                     <h2>Exportar Resultados</h2>
                     <button id="downloadBtn">Descargar CSV Extrapolado</button>
+                    <div id="downloadStatus" class="status-message"></div>
                 </div>
                 
                 <div class="data-info">
@@ -332,6 +347,9 @@
         const originalMaxElem = document.getElementById('originalMax');
         const newMinElem = document.getElementById('newMin');
         const newMaxElem = document.getElementById('newMax');
+        const loadStatus = document.getElementById('loadStatus');
+        const updateStatus = document.getElementById('updateStatus');
+        const downloadStatus = document.getElementById('downloadStatus');
 
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', () => {
@@ -363,6 +381,10 @@
             
             // Inicializar gráfico
             initChart();
+            
+            // Mensaje inicial
+            loadStatus.textContent = "Esperando datos...";
+            loadStatus.className = "status-message warning";
         });
 
         // Inicializar gráfico
@@ -439,7 +461,8 @@
         function loadCSV() {
             const file = csvFileInput.files[0];
             if (!file) {
-                alert('Por favor, selecciona un archivo CSV');
+                loadStatus.textContent = "Error: Por favor, selecciona un archivo CSV";
+                loadStatus.className = "status-message error";
                 return;
             }
             
@@ -488,9 +511,11 @@
                     // Actualizar gráfico
                     updateChart();
                     
-                    alert(`Datos cargados correctamente: ${originalData.length} mediciones`);
+                    loadStatus.textContent = `Datos cargados: ${originalData.length} mediciones`;
+                    loadStatus.className = "status-message success";
                 } catch (error) {
-                    alert('Error al procesar el archivo: ' + error.message);
+                    loadStatus.textContent = 'Error al procesar el archivo: ' + error.message;
+                    loadStatus.className = "status-message error";
                     console.error(error);
                 }
             };
@@ -507,19 +532,27 @@
             // Calcular el nuevo rango
             const newRange = maxTemp - minTemp;
             
-            // Escalar los datos al nuevo rango manteniendo la forma
-            extrapolatedData = originalData.map(value => {
-                // Normalizar al rango [0, 1]
-                const normalized = (value - minOriginal) / originalRange;
-                // Aplicar al nuevo rango
-                return minTemp + normalized * newRange;
-            });
+            // Manejar caso cuando el rango original es cero
+            if (originalRange === 0) {
+                // Si todos los valores son iguales, usamos el valor medio entre minTemp y maxTemp
+                const avg = (minTemp + maxTemp) / 2;
+                extrapolatedData = originalData.map(() => avg);
+            } else {
+                // Escalar los datos al nuevo rango manteniendo la forma
+                extrapolatedData = originalData.map(value => {
+                    // Normalizar al rango [0, 1]
+                    const normalized = (value - minOriginal) / originalRange;
+                    // Aplicar al nuevo rango
+                    return minTemp + normalized * newRange;
+                });
+            }
         }
 
         // Actualizar extrapolación
         function updateExtrapolation() {
             if (originalData.length === 0) {
-                alert('Primero carga un archivo CSV');
+                updateStatus.textContent = "Error: Primero carga un archivo CSV";
+                updateStatus.className = "status-message error";
                 return;
             }
             
@@ -527,18 +560,21 @@
             minTemp = parseFloat(minTempInput.value);
             maxTemp = parseFloat(maxTempInput.value);
             
-            if (isNaN(minTemp) {
-                alert('Por favor ingresa un valor numérico para la temperatura mínima');
+            if (isNaN(minTemp)) {
+                updateStatus.textContent = "Error: Ingresa un valor numérico para la temperatura mínima";
+                updateStatus.className = "status-message error";
                 return;
             }
             
             if (isNaN(maxTemp)) {
-                alert('Por favor ingresa un valor numérico para la temperatura máxima');
+                updateStatus.textContent = "Error: Ingresa un valor numérico para la temperatura máxima";
+                updateStatus.className = "status-message error";
                 return;
             }
             
             if (minTemp >= maxTemp) {
-                alert('La temperatura mínima debe ser menor que la máxima');
+                updateStatus.textContent = "Error: La temperatura mínima debe ser menor que la máxima";
+                updateStatus.className = "status-message error";
                 return;
             }
             
@@ -555,6 +591,9 @@
             
             // Actualizar gráfico
             updateChart();
+            
+            updateStatus.textContent = "Extrapolación actualizada correctamente";
+            updateStatus.className = "status-message success";
         }
 
         // Actualizar gráfico
@@ -576,24 +615,35 @@
         // Descargar CSV
         function downloadCSV() {
             if (extrapolatedData.length === 0) {
-                alert('No hay datos extrapolados para descargar');
+                downloadStatus.textContent = "Error: No hay datos extrapolados para descargar";
+                downloadStatus.className = "status-message error";
                 return;
             }
             
-            // Crear contenido CSV
-            const csvContent = "data:text/csv;charset=utf-8," 
-                + extrapolatedData.map(value => value.toFixed(4)).join('\n');
-            
-            // Crear enlace de descarga
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "datos_extrapolados.csv");
-            document.body.appendChild(link);
-            
-            // Descargar
-            link.click();
-            document.body.removeChild(link);
+            try {
+                // Crear contenido CSV
+                const csvContent = extrapolatedData.map(value => value.toFixed(4)).join('\n');
+                
+                // Crear elemento de descarga
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'datos_extrapolados.csv');
+                link.style.visibility = 'hidden';
+                
+                // Añadir al documento y hacer clic
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                downloadStatus.textContent = "Descarga iniciada: datos_extrapolados.csv";
+                downloadStatus.className = "status-message success";
+            } catch (error) {
+                downloadStatus.textContent = "Error al descargar: " + error.message;
+                downloadStatus.className = "status-message error";
+                console.error(error);
+            }
         }
     </script>
 </body>
