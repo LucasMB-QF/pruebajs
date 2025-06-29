@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrapolador de Temperatura con Variación de Curvas</title>
+    <title>Extrapolador de Temperatura con Variación en Tiempo Real</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -157,12 +157,25 @@
             height: 22px;
             border-radius: 50%;
             cursor: pointer;
+            transition: all 0.2s;
         }
         
-        #minTempRange::-webkit-slider-thumb { background: var(--secondary); }
-        #maxTempRange::-webkit-slider-thumb { background: var(--accent); }
-        #variationRange::-webkit-slider-thumb { background: var(--variation); }
-        #smoothnessRange::-webkit-slider-thumb { background: #f39c12; }
+        #minTempRange::-webkit-slider-thumb { 
+            background: var(--secondary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        #maxTempRange::-webkit-slider-thumb { 
+            background: var(--accent);
+            box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+        }
+        #variationRange::-webkit-slider-thumb { 
+            background: var(--variation);
+            box-shadow: 0 0 0 2px rgba(155, 89, 182, 0.2);
+        }
+        #smoothnessRange::-webkit-slider-thumb { 
+            background: #f39c12;
+            box-shadow: 0 0 0 2px rgba(243, 156, 18, 0.2);
+        }
         
         button {
             display: block;
@@ -196,10 +209,6 @@
         
         #loadBtn {
             background: var(--secondary);
-        }
-        
-        #updateBtn {
-            background: #9b59b6;
         }
         
         #downloadBtn {
@@ -310,6 +319,59 @@
             margin-bottom: 5px;
         }
         
+        .real-time-controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .real-time-controls h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .real-time-controls h3 i {
+            margin-right: 10px;
+            color: var(--variation);
+        }
+        
+        .variation-intensity {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .variation-intensity input[type="range"] {
+            flex: 1;
+            height: 10px;
+            -webkit-appearance: none;
+            background: #dee2e6;
+            border-radius: 5px;
+            outline: none;
+        }
+        
+        .variation-intensity input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 25px;
+            height: 25px;
+            background: var(--variation);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.3);
+        }
+        
+        .variation-intensity span {
+            min-width: 40px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--variation);
+        }
+        
         @media (max-width: 1000px) {
             .main-content {
                 flex-direction: column;
@@ -325,20 +387,20 @@
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-temperature-high"></i> Extrapolador de Datos de Temperatura</h1>
-            <p class="subtitle">Sube tus datos con comas decimales, ajusta valores y varía la forma de las curvas</p>
+            <h1><i class="fas fa-chart-line"></i> Extrapolador de Temperatura con Variación en Tiempo Real</h1>
+            <p class="subtitle">Controla la forma de la curva con el deslizador inferior - ¡Actualización instantánea!</p>
         </header>
         
         <div class="main-content">
             <div class="controls">
                 <div class="instructions">
-                    <h3><i class="fas fa-info-circle"></i> Instrucciones:</h3>
+                    <h3><i class="fas fa-lightbulb"></i> Instrucciones:</h3>
                     <ul>
-                        <li><i class="fas fa-check-circle"></i> Sube un archivo CSV con valores de temperatura (un valor por línea)</li>
-                        <li><i class="fas fa-check-circle"></i> Usa comas como separador decimal (ej: 23,5)</li>
-                        <li><i class="fas fa-check-circle"></i> Ajusta los valores mínimos y máximos deseados</li>
-                        <li><i class="fas fa-check-circle"></i> Controla la variación para cambiar la forma de la curva</li>
-                        <li><i class="fas fa-check-circle"></i> Descarga los datos extrapolados con comas decimales</li>
+                        <li><i class="fas fa-check"></i> Sube tu archivo CSV con valores de temperatura (un valor por línea)</li>
+                        <li><i class="fas fa-check"></i> Usa comas como separador decimal (ej: 23,5)</li>
+                        <li><i class="fas fa-check"></i> Ajusta los valores mínimos y máximos deseados</li>
+                        <li><i class="fas fa-check"></i> <strong>Desliza el control inferior para variar la forma de la curva en tiempo real</strong></li>
+                        <li><i class="fas fa-check"></i> Descarga los datos cuando estés satisfecho</li>
                     </ul>
                 </div>
                 
@@ -374,33 +436,8 @@
                             <span id="maxTempValue">--</span>
                         </div>
                     </div>
-                </div>
-                
-                <div class="control-group">
-                    <h2><i class="fas fa-wave-square"></i> Variación de Curvas</h2>
-                    <div class="input-group">
-                        <label for="variation"><i class="fas fa-random"></i> Variación de Forma:</label>
-                        <input type="text" id="variation" value="0,5" placeholder="Intensidad de variación">
-                        <div class="range-container">
-                            <input type="range" id="variationRange" min="0" max="5" step="0.1" value="0.5">
-                            <span id="variationValue">0,5</span>
-                        </div>
-                        <p class="variation-control"><small>Controla cuánto varía la curva respecto al patrón original (0 = sin variación, 5 = máxima variación)</small></p>
-                    </div>
                     
-                    <div class="input-group">
-                        <label for="smoothness"><i class="fas fa-wind"></i> Suavidad de Curva:</label>
-                        <input type="text" id="smoothness" value="0,4" placeholder="Nivel de suavidad">
-                        <div class="range-container">
-                            <input type="range" id="smoothnessRange" min="0" max="1" step="0.05" value="0.4">
-                            <span id="smoothnessValue">0,4</span>
-                        </div>
-                        <p class="variation-control"><small>Ajusta la suavidad de las transiciones en la curva (0 = cambios bruscos, 1 = cambios muy suaves)</small></p>
-                    </div>
-                    
-                    <button id="randomBtn"><i class="fas fa-dice"></i> Generar Variación Aleatoria</button>
-                    <button id="updateBtn"><i class="fas fa-sync-alt"></i> Actualizar Extrapolación</button>
-                    <div id="updateStatus" class="status-message"></div>
+                    <button id="updateBtn" style="display: none;">Actualizar</button>
                 </div>
                 
                 <div class="control-group">
@@ -434,8 +471,19 @@
             </div>
         </div>
         
+        <div class="real-time-controls">
+            <h3><i class="fas fa-sliders-h"></i> Control de Variación en Tiempo Real</h3>
+            <div class="variation-intensity">
+                <span>Forma Original</span>
+                <input type="range" id="shapeVariation" min="0" max="100" value="50">
+                <span>Máxima Variación</span>
+                <span id="variationPercent">50%</span>
+            </div>
+            <p><i class="fas fa-info-circle"></i> Desliza para cambiar la forma de la curva - La actualización es instantánea</p>
+        </div>
+        
         <footer>
-            <p><i class="fas fa-info-circle"></i> Extrapolador de Datos de Temperatura | Compatible con comas decimales y variación de curvas</p>
+            <p><i class="fas fa-info-circle"></i> Extrapolador de Datos de Temperatura | Variación de forma en tiempo real</p>
         </footer>
     </div>
 
@@ -447,9 +495,9 @@
         let maxOriginal = 0;
         let minTemp = 0;
         let maxTemp = 0;
-        let variationIntensity = 0.5;
-        let curveSmoothness = 0.4;
         let temperatureChart = null;
+        let shapeVariation = 0.5;
+        let noiseSeed = Date.now();
 
         // Elementos del DOM
         const csvFileInput = document.getElementById('csvFile');
@@ -460,80 +508,56 @@
         const maxTempRange = document.getElementById('maxTempRange');
         const minTempValue = document.getElementById('minTempValue');
         const maxTempValue = document.getElementById('maxTempValue');
-        const variationInput = document.getElementById('variation');
-        const variationRange = document.getElementById('variationRange');
-        const variationValue = document.getElementById('variationValue');
-        const smoothnessInput = document.getElementById('smoothness');
-        const smoothnessRange = document.getElementById('smoothnessRange');
-        const smoothnessValue = document.getElementById('smoothnessValue');
-        const updateBtn = document.getElementById('updateBtn');
-        const randomBtn = document.getElementById('randomBtn');
         const downloadBtn = document.getElementById('downloadBtn');
         const originalMinElem = document.getElementById('originalMin');
         const originalMaxElem = document.getElementById('originalMax');
         const newMinElem = document.getElementById('newMin');
         const newMaxElem = document.getElementById('newMax');
         const loadStatus = document.getElementById('loadStatus');
-        const updateStatus = document.getElementById('updateStatus');
         const downloadStatus = document.getElementById('downloadStatus');
         const progressContainer = document.getElementById('progressContainer');
         const progressBar = document.getElementById('progressBar');
+        const shapeVariationSlider = document.getElementById('shapeVariation');
+        const variationPercent = document.getElementById('variationPercent');
 
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', () => {
             // Configurar eventos
             loadBtn.addEventListener('click', loadCSV);
-            updateBtn.addEventListener('click', updateExtrapolation);
-            randomBtn.addEventListener('click', generateRandomVariation);
             downloadBtn.addEventListener('click', downloadCSV);
             
             // Configurar inputs de rango
             minTempRange.addEventListener('input', () => {
                 minTempInput.value = minTempRange.value.replace('.', ',');
                 minTempValue.textContent = minTempRange.value.replace('.', ',') + "°C";
+                updateExtrapolation();
             });
             
             maxTempRange.addEventListener('input', () => {
                 maxTempInput.value = maxTempRange.value.replace('.', ',');
                 maxTempValue.textContent = maxTempRange.value.replace('.', ',') + "°C";
+                updateExtrapolation();
             });
             
             minTempInput.addEventListener('input', () => {
                 const value = parseFloat(minTempInput.value.replace(',', '.')) || 0;
                 minTempRange.value = value;
                 minTempValue.textContent = minTempInput.value + "°C";
+                updateExtrapolation();
             });
             
             maxTempInput.addEventListener('input', () => {
                 const value = parseFloat(maxTempInput.value.replace(',', '.')) || 0;
                 maxTempRange.value = value;
                 maxTempValue.textContent = maxTempInput.value + "°C";
+                updateExtrapolation();
             });
             
-            variationRange.addEventListener('input', () => {
-                variationInput.value = variationRange.value.replace('.', ',');
-                variationValue.textContent = variationRange.value.replace('.', ',');
-                variationIntensity = parseFloat(variationRange.value);
-            });
-            
-            variationInput.addEventListener('input', () => {
-                const value = parseFloat(variationInput.value.replace(',', '.')) || 0;
-                variationRange.value = value;
-                variationValue.textContent = variationInput.value;
-                variationIntensity = value;
-            });
-            
-            smoothnessRange.addEventListener('input', () => {
-                smoothnessInput.value = smoothnessRange.value.replace('.', ',');
-                smoothnessValue.textContent = smoothnessRange.value.replace('.', ',');
-                curveSmoothness = parseFloat(smoothnessRange.value);
-            });
-            
-            smoothnessInput.addEventListener('input', () => {
-                const value = parseFloat(smoothnessInput.value.replace(',', '.')) || 0;
-                smoothnessRange.value = value;
-                smoothnessValue.textContent = smoothnessInput.value;
-                curveSmoothness = value;
+            // Control de variación en tiempo real
+            shapeVariationSlider.addEventListener('input', () => {
+                shapeVariation = shapeVariationSlider.value / 100;
+                variationPercent.textContent = shapeVariationSlider.value + '%';
+                applyShapeVariation();
             });
             
             // Inicializar gráfico
@@ -543,6 +567,12 @@
             loadStatus.textContent = "Esperando datos...";
             loadStatus.className = "status-message warning";
         });
+
+        // Función de ruido pseudoaleatorio (para variaciones consistentes)
+        function noise(index) {
+            const x = Math.sin(index * 12.9898 + noiseSeed) * 43758.5453;
+            return x - Math.floor(x);
+        }
 
         // Inicializar gráfico
         function initChart() {
@@ -560,10 +590,10 @@
                             borderWidth: 3,
                             pointRadius: 0,
                             tension: 0.4,
-                            fill: true
+                            fill: false
                         },
                         {
-                            label: 'Datos Extrapolados',
+                            label: 'Curva Extrapolada',
                             data: [],
                             borderColor: '#e74c3c',
                             backgroundColor: 'rgba(231, 76, 60, 0.1)',
@@ -630,7 +660,7 @@
                         mode: 'index'
                     },
                     animation: {
-                        duration: 500,
+                        duration: 300,
                         easing: 'easeOutQuart'
                     }
                 }
@@ -708,10 +738,7 @@
                     newMaxElem.textContent = maxTemp.toFixed(1).replace('.', ',') + "°C";
                     
                     // Realizar extrapolación inicial
-                    extrapolateData();
-                    
-                    // Actualizar gráfico
-                    updateChart();
+                    updateExtrapolation();
                     
                     loadStatus.textContent = `Datos cargados: ${originalData.length} mediciones`;
                     loadStatus.className = "status-message success";
@@ -724,19 +751,28 @@
                 }
             };
             
-            reader.onprogress = function(e) {
-                if (e.lengthComputable) {
-                    const percentLoaded = Math.round((e.loaded / e.total) * 100);
-                    progressBar.style.width = `${percentLoaded}%`;
-                }
-            };
-            
             reader.readAsText(file);
         }
 
-        // Extrapolar datos con variación de forma
-        function extrapolateData() {
+        // Extrapolar datos
+        function updateExtrapolation() {
             if (originalData.length === 0) return;
+            
+            // Obtener nuevos valores convirtiendo comas a puntos
+            minTemp = parseFloat(minTempInput.value.replace(',', '.'));
+            maxTemp = parseFloat(maxTempInput.value.replace(',', '.'));
+            
+            if (isNaN(minTemp) || isNaN(maxTemp) || minTemp >= maxTemp) {
+                return;
+            }
+            
+            // Actualizar valores mostrados
+            minTempRange.value = minTemp;
+            maxTempRange.value = maxTemp;
+            minTempValue.textContent = minTemp.toFixed(1).replace('.', ',') + "°C";
+            maxTempValue.textContent = maxTemp.toFixed(1).replace('.', ',') + "°C";
+            newMinElem.textContent = minTemp.toFixed(1).replace('.', ',') + "°C";
+            newMaxElem.textContent = maxTemp.toFixed(1).replace('.', ',') + "°C";
             
             // Calcular el rango original
             const originalRange = maxOriginal - minOriginal;
@@ -761,150 +797,59 @@
                 }
             }
             
-            // Aplicar variación a la curva
-            return applyCurveVariation();
+            // Aplicar variación
+            applyShapeVariation();
         }
         
-        // Aplicar variación a la curva
-        function applyCurveVariation() {
-            if (originalData.length === 0) return [];
+        // Aplicar variación a la forma de la curva
+        function applyShapeVariation() {
+            if (extrapolatedData.length === 0) return;
             
             // Crear una versión variada de los datos extrapolados
             const variedData = [...extrapolatedData];
             const dataLength = variedData.length;
             
-            // Aplicar variación controlada
-            for (let i = 1; i < dataLength - 1; i++) {
-                // Calcular una variación basada en la posición en la curva
-                const positionFactor = i / dataLength;
-                const waveFactor = Math.sin(positionFactor * Math.PI * 4);
+            // Solo aplicar variación si el control no está en 0%
+            if (shapeVariation > 0) {
+                // Calcular la amplitud máxima de variación basada en el rango de temperatura
+                const amplitude = (maxTemp - minTemp) * 0.15 * shapeVariation;
                 
-                // Variación aleatoria controlada
-                const randomVariation = (Math.random() - 0.5) * variationIntensity * 2;
-                
-                // Variación basada en la tendencia
-                const trendVariation = (variedData[i] - variedData[i-1]) * 0.3 * variationIntensity;
-                
-                // Combinar variaciones
-                const totalVariation = randomVariation + trendVariation + waveFactor * variationIntensity * 0.5;
-                
-                // Aplicar variación suavizada
-                variedData[i] += totalVariation * 0.7;
-                
-                // Mantener dentro de los límites
-                if (variedData[i] < minTemp) variedData[i] = minTemp;
-                if (variedData[i] > maxTemp) variedData[i] = maxTemp;
+                // Aplicar variación controlada
+                for (let i = 1; i < dataLength - 1; i++) {
+                    // Calcular una variación basada en la posición en la curva
+                    const positionFactor = i / dataLength;
+                    const waveFactor = Math.sin(positionFactor * Math.PI * 4);
+                    
+                    // Variación basada en ruido pseudoaleatorio
+                    const noiseFactor = (noise(i) - 0.5) * 2;
+                    
+                    // Combinar factores de variación
+                    const totalVariation = (waveFactor * 0.7 + noiseFactor * 0.3) * amplitude;
+                    
+                    // Aplicar variación
+                    variedData[i] += totalVariation;
+                    
+                    // Mantener dentro de los límites
+                    if (variedData[i] < minTemp) variedData[i] = minTemp;
+                    if (variedData[i] > maxTemp) variedData[i] = maxTemp;
+                }
             }
-            
-            // Suavizar la curva
-            return smoothCurve(variedData, curveSmoothness);
-        }
-        
-        // Función para suavizar la curva
-        function smoothCurve(data, factor) {
-            if (data.length < 3) return data;
-            
-            const smoothed = [...data];
-            
-            for (let i = 1; i < data.length - 1; i++) {
-                smoothed[i] = factor * data[i] + 
-                              (1 - factor) * (data[i-1] + data[i+1]) / 2;
-            }
-            
-            return smoothed;
-        }
-
-        // Actualizar extrapolación
-        function updateExtrapolation() {
-            if (originalData.length === 0) {
-                updateStatus.textContent = "Error: Primero carga un archivo CSV";
-                updateStatus.className = "status-message error";
-                return;
-            }
-            
-            // Obtener nuevos valores convirtiendo comas a puntos
-            minTemp = parseFloat(minTempInput.value.replace(',', '.'));
-            maxTemp = parseFloat(maxTempInput.value.replace(',', '.'));
-            
-            if (isNaN(minTemp)) {
-                updateStatus.textContent = "Error: Ingresa un valor numérico para la temperatura mínima";
-                updateStatus.className = "status-message error";
-                return;
-            }
-            
-            if (isNaN(maxTemp)) {
-                updateStatus.textContent = "Error: Ingresa un valor numérico para la temperatura máxima";
-                updateStatus.className = "status-message error";
-                return;
-            }
-            
-            if (minTemp >= maxTemp) {
-                updateStatus.textContent = "Error: La temperatura mínima debe ser menor que la máxima";
-                updateStatus.className = "status-message error";
-                return;
-            }
-            
-            // Actualizar valores mostrados
-            minTempRange.value = minTemp;
-            maxTempRange.value = maxTemp;
-            minTempValue.textContent = minTemp.toFixed(1).replace('.', ',') + "°C";
-            maxTempValue.textContent = maxTemp.toFixed(1).replace('.', ',') + "°C";
-            newMinElem.textContent = minTemp.toFixed(1).replace('.', ',') + "°C";
-            newMaxElem.textContent = maxTemp.toFixed(1).replace('.', ',') + "°C";
-            
-            // Realizar extrapolación
-            extrapolateData();
             
             // Actualizar gráfico
-            updateChart();
-            
-            updateStatus.textContent = "Extrapolación actualizada con variación aplicada";
-            updateStatus.className = "status-message success";
-        }
-        
-        // Generar variación aleatoria
-        function generateRandomVariation() {
-            if (originalData.length === 0) {
-                updateStatus.textContent = "Error: Primero carga un archivo CSV";
-                updateStatus.className = "status-message error";
-                return;
-            }
-            
-            // Generar valores aleatorios para variación y suavidad
-            variationIntensity = (Math.random() * 2).toFixed(1);
-            curveSmoothness = (0.2 + Math.random() * 0.6).toFixed(2);
-            
-            // Actualizar controles
-            variationInput.value = variationIntensity.replace('.', ',');
-            variationRange.value = variationIntensity;
-            variationValue.textContent = variationIntensity.replace('.', ',');
-            
-            smoothnessInput.value = curveSmoothness.replace('.', ',');
-            smoothnessRange.value = curveSmoothness;
-            smoothnessValue.textContent = curveSmoothness.replace('.', ',');
-            
-            // Actualizar extrapolación
-            updateExtrapolation();
-            
-            updateStatus.textContent = "Variación aleatoria aplicada a la curva";
-            updateStatus.className = "status-message success";
+            updateChart(extrapolatedData, variedData);
         }
 
         // Actualizar gráfico
-        function updateChart() {
+        function updateChart(extrapolated = [], varied = []) {
             if (temperatureChart && originalData.length > 0) {
                 // Crear etiquetas para el eje X
                 const labels = Array.from({length: originalData.length}, (_, i) => i % 50 === 0 ? `M${i+1}` : '');
                 
-                // Obtener datos variados
-                const variedData = extrapolateData();
-                
                 // Actualizar datos del gráfico
                 temperatureChart.data.labels = labels;
                 temperatureChart.data.datasets[0].data = originalData;
-                temperatureChart.data.datasets[1].data = extrapolatedData;
-                temperatureChart.data.datasets[2].data = variedData;
-                temperatureChart.data.datasets[2].tension = curveSmoothness;
+                temperatureChart.data.datasets[1].data = extrapolated.length ? extrapolated : extrapolatedData;
+                temperatureChart.data.datasets[2].data = varied.length ? varied : extrapolatedData;
                 
                 // Actualizar el gráfico
                 temperatureChart.update();
@@ -920,8 +865,8 @@
             }
             
             try {
-                // Obtener los datos variados para descargar
-                const variedData = extrapolateData();
+                // Obtener la curva variada actual
+                const variedData = temperatureChart.data.datasets[2].data;
                 
                 // Crear contenido CSV con comas decimales
                 const csvContent = variedData.map(value => 
